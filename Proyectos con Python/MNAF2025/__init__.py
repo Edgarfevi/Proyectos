@@ -1,1 +1,0 @@
-print("Edgar Fernández Vigil")
