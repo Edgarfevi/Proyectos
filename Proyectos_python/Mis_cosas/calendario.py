@@ -33,8 +33,9 @@ for i in range (3,len(df)):
                 subject = df.iloc[i,k+1]
             if type(df.iloc[i,k+2]) == str and df.iloc[i,k+2] != "":
                 Location = df.iloc[i,k+2]
-            calendario[n]={'Subject': f'{subject}','Start Date': f'{dia[k]}','Start Time': f'{Start_Time}','End Date': f'{dia[k]}','End Time': f'{End_Time}','All Day Event': False,'Location': f'{Location}','Private': False}
-            n+=1
+            if type(df.iloc[i,k]) == str and df.iloc[i,k] != "":
+                calendario[n]={'Subject': f'{subject}','Start Date': f'{dia[k]}','Start Time': f'{Start_Time}','End Date': f'{dia[k]}','End Time': f'{End_Time}','All Day Event': False,'Location': f'{Location}','Private': False}
+                n+=1
 
 
 
