@@ -78,3 +78,5 @@ with open("calendario.ics", "w") as f:
         f.write("END:VEVENT\n")
 
     f.write("END:VCALENDAR")
+
+
