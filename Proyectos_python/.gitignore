@@ -1,5 +1,6 @@
 # Virtualenv
-Electronica/
+Electronica/*
+!Electronica/
 !Electronica/graficas_practica4/
 
 Hackathon_agenteia/
