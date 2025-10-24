@@ -1,0 +1,36 @@
+# Virtualenv
+Electronica/
+!Electronica/graficas_practica4/
+
+Hackathon_agenteia/
+!Hackathon_agenteia/Formación_ia/
+!Hackathon_agenteia/b03-agente distinto sin analizador.py
+
+Mis_cosas/
+!Mis_cosas/calendario/
+
+MNAF2025/
+
+
+presentaciones_manim/
+!presentaciones_manim/archivos_py/
+!presentaciones_manim/media/
+
+spaceapp/
+!spaceapp/archivos_py
+
+# Archivos de Python compilados
+*.pyc
+*.pyo
+__pycache__/
+
+# Configuración del editor
+.vscode/
+.idea/
+
+# Archivos de logs y temporales
+*.log
+*.sqlite3
+
+# Otros
+.DS_Store
