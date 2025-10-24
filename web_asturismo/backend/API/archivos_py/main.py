@@ -31,7 +31,7 @@ apis = pd.read_csv(fichero2)
 apis = apis.replace({np.nan: None})
 #masificacion = pd.read_csv(densidad)
 
-masificacionl = pd.read_csv('indice_masificacion_asturias.csv')
+masificacionl = pd.read_csv('/home/edgar/GitHub/Proyectos/web_asturismo/backend/API/Archivos_info/indice_masificacion_asturias.csv')
 masificacionl = masificacionl.replace({np.nan: None})
 municipios = datos['nombre']
 descripcion = datos['descripcion']
