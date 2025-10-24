@@ -3,21 +3,27 @@ Electronica/*
 !Electronica/
 !Electronica/graficas_practica4/
 
-Hackathon_agenteia/
+Hackathon_agenteia/*
+!Hackathon_agenteia/
 !Hackathon_agenteia/Formación_ia/
 !Hackathon_agenteia/b03-agente distinto sin analizador.py
 
-Mis_cosas/
+Mis_cosas/*
+!Mis_cosas/
 !Mis_cosas/calendario/
 
-MNAF2025/
+MNAF2025/*
+!MNAF2025/
+!MNAF2025/archivos_py/
 
 
-presentaciones_manim/
+presentaciones_manim/*
+!presentaciones_manim/
 !presentaciones_manim/archivos_py/
 !presentaciones_manim/media/
 
-spaceapp/
+spaceapp/*
+!spaceapp/
 !spaceapp/archivos_py
 
 # Archivos de Python compilados
