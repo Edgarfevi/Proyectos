@@ -27,6 +27,9 @@ spaceapp/*
 !spaceapp/
 !spaceapp/archivos_py
 
+TEIII/*
+!TEIII/
+!TEIII/archivos_py/
 # Archivos de Python compilados
 *.pyc
 *.pyo
