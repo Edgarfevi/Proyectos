@@ -1,0 +1,7 @@
+#! /bin/bash
+
+for img in imagenes_pdf/pagina_*.png; do
+    ollama run qwen-vl --file "$img" "Convierte el contenido a LaTeX" >> resultado.tex
+    echo -e "\n\n" >> resultado.tex
+done
+rm -rf /home/edgar/GitHub/Proyectos/IA/Imagenes_temp/almacen_img
