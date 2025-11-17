@@ -1,7 +1,4 @@
 # Virtualenv
-Electronica/*
-!Electronica/
-!Electronica/graficas_practica4/
 
 Hackathon_agenteia/*
 !Hackathon_agenteia/
@@ -13,10 +10,6 @@ Mis_cosas/*
 !Mis_cosas/calendario/
 !Mis_cosas/archivos_py_prueba/
 
-MNAF2025/*
-!MNAF2025/
-!MNAF2025/archivos_py/
-
 
 presentaciones_manim/*
 !presentaciones_manim/
@@ -27,10 +20,6 @@ spaceapp/*
 !spaceapp/
 !spaceapp/archivos_py
 
-TEIII/*
-!TEIII/
-!TEIII/archivos_py/
-!/TEIII/graficas/
 # Archivos de Python compilados
 *.pyc
 *.pyo

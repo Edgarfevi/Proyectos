@@ -1,0 +1,29 @@
+# Virtualenv
+Electronica/*
+!Electronica/
+!Electronica/graficas_practica4/
+
+MNAF2025/*
+!MNAF2025/
+!MNAF2025/archivos_py/
+
+
+TEIII/*
+!TEIII/
+!TEIII/archivos_py/
+!/TEIII/graficas/
+# Archivos de Python compilados
+*.pyc
+*.pyo
+__pycache__/
+
+# Configuración del editor
+.vscode/
+.idea/
+
+# Archivos de logs y temporales
+*.log
+*.sqlite3
+
+# Otros
+.DS_Store
