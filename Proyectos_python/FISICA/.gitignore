@@ -12,6 +12,10 @@ TEIII/*
 !TEIII/
 !TEIII/archivos_py/
 !/TEIII/graficas/
+
+Optica/*
+!Optica/
+!Optica/Examen_casa/
 # Archivos de Python compilados
 *.pyc
 *.pyo
