@@ -557,3 +557,129 @@ def in_romberg(fun,a,b,nivel=10,tol=1e-6):
 
     # Si terminamos todos los niveles sin llegar a la tolerancia:
     return N[nivel-1][nivel-1], last_delta, N
+
+
+def paracaidista(y0,v0,m,cx,At,apertura=1500,rovar=False):
+    '''
+    Esta función determina el tiempo y la velocidad a la que toma tierra
+    un paracaidista con las condiciones determinadas en los parámetros 
+    
+    PARÁMETROS DE LA FUNCIÓN:
+    ------------------------
+    y0,v0: posición y velocidad inicial del salto en m y m/s respectivamente
+    m: masa del paracaidista equipado en kg
+    cx: iterable con los coeficientes de arrastre del paracaidista antes 
+    y después de la apertura del paracaídas
+    At:iterable con el área transversal del paracaidista en m^2 antes y después de la apertura del paracaídas
+    apertura: altura a la que se abre el paracaídas en m, tiene un valor por defecto de 1500 m
+    rovar: valor lógico que indica si la densidad es variable o no. Por defecto es falso
+
+    RESULTADO:
+    ----------
+    lista con cuatro valores: [velocidad máxima, velocidad de impacto, tiempo hasta que abre el paracaídas,
+    tiempo total de vuelo]
+    '''
+
+    #Definimos el valor de la gravedad, un valor orientativo para el tiempo final, y una lista con los valores iniciales de las variables
+    g=9.81
+    t_fin1=100
+    t_fin2=500
+    ci=[y0,v0]
+
+    #Antes de la apertura del paracaídas la SEDO a resolver es:
+
+    def sedo(t ,Y ,m ,cx ,At , rovar ):
+        ro = 1.225
+        if rovar==True : ro=1.225*np.exp(-Y[0]/8243)
+        kw = cx * ro * At /2
+        dY = np . array ([ Y [1] , - g - kw *Y [1]* abs (Y [1]) /m ])
+        return dY
+    
+    #Tenemos que resolver dos problemas de valor inicial. Cada uno con unos valores iniciales y un evento diferente
+
+    #Empezamos definiendo el evento de que se abre el paracaídas
+    def abreParaca (t ,Y ,m ,cx ,At , rovar ) : return Y[0] - apertura
+    abreParaca . terminal = True
+    abreParaca . direction = -1
+
+    sol1 = scin . solve_ivp ( sedo ,[0,t_fin1],ci, args =[m ,cx[0] , At[0] , rovar ], events = abreParaca)
+
+    #Ahora definimos el evento de que impacte en el suelo
+    def impactoSuelo (t ,Y ,m , cx ,At , rovar ): return Y[0]
+    impactoSuelo . terminal = True
+    impactoSuelo . direction = -1
+
+    #Ahora ya podemos resolver la segunda parte del recorrido, teniendo en cuenta los cambios en los coeficientes y 
+    #que este segundo tramo toma como valores iniciales del primero
+    sol2 = scin . solve_ivp ( sedo , [sol1.t[-1],t_fin2],[sol1.y[0][-1], sol1.y[1][-1]], args =[m ,cx[1] , At[1] , rovar ], events = impactoSuelo)
+
+    v_max = max(np.max(np.abs(sol1.y[1])), np.max(np.abs(sol2.y[1])))
+    v_impacto=sol2.y[1][-1]
+    t_paraca=sol1.t[-1]
+    t_impacto=sol2.t[-1]
+
+    return [v_max, v_impacto, t_paraca, t_impacto]
+
+
+
+def disparo(F,ab,cc,mi=[0,1],niter=100, xtol=1e-6, ftol=1e-9,**opt):
+    '''
+    Esta función resuelve un problema de contorno transformándolo en uno de valor inicial.
+    
+    PARÁMETROS DE LA FUNCIÓN:
+    -------------------------
+    F : función (vectorial) que define el SEDO
+    ab : intervalo de resolución del problema de contorno. Lista con los extremos inicial y final
+    cc : condiciones de contorno (Dirichlet) en los extremos por orden cc=[cc_a, cc_b]
+    mi : valores de la pendiente en las dos primeras iteraciones (valor por defecto:[0,1])
+    niter: número máximo de iteraciones (valor por defecto: 100)
+    xtol: error admisible en la pendiente (valor por defecto: 1E-6)
+    ftol : error admisible en la solución (valor por defecto: 1E-9)
+    opt: diccionario con las opciones para solve_ivp (method, dense_output, events).    
+
+    RESULTADOS:
+    -----------
+    S: estructura de solve_ivp        
+    '''
+
+    opc = {"method":"RK45", "dense_output": False , "events": None }
+    keys = list ( opt )
+    for clave , valor in opt . items () :
+        clave = clave . lower ()
+        if clave in keys :
+            opt [ clave ] = valor
+        else :
+            print (" Opt {} inválida ". format ( clave ))
+
+    #Resolvemos la SEDO con mi[0]. Sabemos que el primer valor inicial es cc[0], y suponemos que el 
+    #segundo, el de la derivada evaluada en el 0, es mi[0]
+    
+    s1=scin.solve_ivp(F,ab,[cc[0],mi[0]],method=opc['method'], dense_output=opc['dense_output'], events=opc['events'])
+
+    #El segundo argumento que nos devuelve s1.y son las derivadas en los puntos del intervalo usados
+    #Así que la derivada en el extremo final b será s1.y[1][-1], y tendremos que ver más adelante si este coincide con cc_b
+
+    w_m1=s1.y[0][-1]
+
+    #Repetimos este mismo procedimiento con mi[1]
+    s2=scin.solve_ivp(F,ab,[cc[0],mi[1]],method=opc['method'], dense_output=opc['dense_output'], events=opc['events'])
+    w_m2=s2.y[0][-1]
+
+    #Ahora utilizamos un bucle para las siguiuentes pendientes
+    m_k=mi[0]
+    m_k1=mi[1]
+    w_k = w_m1
+    w_k1 = w_m2
+
+
+    for k in range(1,niter+1):
+        m_k2=m_k1+(cc[1]-w_k1)*((m_k1-m_k)/(w_k1-w_k))
+        s_k2=scin.solve_ivp(F,ab,[cc[0],m_k2],method=opc['method'], dense_output=opc['dense_output'], events=opc['events'])
+        w_k2=s_k2.y[0][-1]
+
+        if abs(m_k2-m_k1)< xtol or abs(w_k2-cc[1])< ftol: 
+            break
+        m_k, m_k1 = m_k1, m_k2
+        w_k, w_k1 = w_k1, w_k2
+    
+    return s_k2
