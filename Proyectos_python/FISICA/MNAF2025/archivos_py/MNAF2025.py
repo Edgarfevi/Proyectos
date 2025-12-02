@@ -4,7 +4,7 @@ from math import *
 import numpy as np
 import copy
 import numpy.polynomial as poly
-import scipy . interpolate as scip
+import scipy.interpolate as scip
 import sympy as sp
 import copy
 import scipy.integrate as scin
@@ -12,7 +12,7 @@ import numpy.linalg as la
 import scipy.optimize as scop
 import scipy.linalg as sla
 from random import randint
-
+from scipy.interpolate import CubicSpline
 
 def euclides(D,d):
     '''
@@ -231,7 +231,82 @@ def itp_Tchebishev(fun,ntps,a,b):
 
     return P_itp
 
-
+def itp_parametrica(data, bc_type="natural", u=None):
+    """
+    Calcula el interpolante paramétrico mediante splines cúbicas.
+    
+    Parámetros:
+    -----------
+    data : array-like, shape (n, 2) o (n, 3)
+        Puntos a interpolar. Cada fila es un punto (x, y) o (x, y, z)
+    bc_type : str, opcional (default='natural')
+        Tipo de condiciones de frontera: 'natural', 'clamped', 'periodic'
+    u : array-like, opcional (default=None)
+        Valores del parámetro en cada punto. Si es None, se calcula
+        proporcional a la distancia acumulada entre puntos.
+    
+    Retorna:
+    --------
+    funitp : callable
+        Función vectorial de interpolación que acepta valores del parámetro
+    param : array
+        Valores del parámetro en los puntos dados
+    """
+    
+    # Convertir data a numpy array
+    data = np.array(data)
+    n_points = data.shape[0]
+    n_dims = data.shape[1]
+    
+    # Calcular parámetro u si no se proporciona
+    if u is None:
+        # Calcular distancias acumuladas entre puntos
+        distances = np.zeros(n_points)
+        for i in range(1, n_points):
+            distances[i] = distances[i-1] + np.linalg.norm(data[i] - data[i-1])
+        
+        # Normalizar a [0, 1]
+        if distances[-1] > 0:
+            u = distances / distances[-1]
+        else:
+            u = np.linspace(0, 1, n_points)
+    else:
+        u = np.array(u)
+    
+    # Crear splines cúbicas para cada coordenada
+    splines = []
+    for dim in range(n_dims):
+        spline = CubicSpline(u, data[:, dim], bc_type=bc_type)
+        splines.append(spline)
+    
+    # Función interpolante vectorial
+    def funitp(u_vals):
+        """
+        Evalúa la función interpolante en los valores del parámetro dados.
+        
+        Parámetros:
+        -----------
+        u_vals : float o array-like
+            Valores del parámetro donde evaluar la interpolación
+        
+        Retorna:
+        --------
+        result : array
+            Puntos interpolados. Si u_vals es escalar, retorna array de tamaño (n_dims,)
+            Si u_vals es array, retorna array de tamaño (len(u_vals), n_dims)
+        """
+        u_vals = np.atleast_1d(u_vals)
+        result = np.zeros((len(u_vals), n_dims))
+        
+        for dim in range(n_dims):
+            result[:, dim] = splines[dim](u_vals)
+        
+        # Si la entrada fue escalar, retornar resultado escalar
+        if len(u_vals) == 1:
+            return result[0]
+        return result
+    
+    return funitp, u
 
 
 def dncoef_base(soporte, puntos, orden):
@@ -253,7 +328,7 @@ def dncoef_base(soporte, puntos, orden):
     '''
     
     # Validación de entrada: el orden debe ser un entero positivo
-    if not (isinstance(orden, int)) and orden > 0:
+    if not isinstance(orden, int) or orden <= 0:
         raise ValueError('El orden de la derivada debe ser un número entero positivo')
     
     # * Paso 1: Construcción de la base de Lagrange
@@ -278,12 +353,14 @@ def dncoef_base(soporte, puntos, orden):
     # * Paso 3: Evaluación de las derivadas en los puntos dados
     # Los coeficientes son los valores de d^n L_i(x) / dx^n evaluados en los puntos
     
-    if isinstance(puntos, ((int, float))):
+    if isinstance(puntos, (int, float)):
         # Caso 1: Un solo punto
         # Evaluamos todas las derivadas en ese punto
-        coef = Derivadas(puntos)
+        coef = []
+        for i in range(len(Derivadas)):
+            coef.append(Derivadas[i](puntos))
         
-    elif isinstance(puntos, ((list, tuple, np.ndarray))):
+    elif isinstance(puntos, (list, tuple, np.ndarray)):
         # Caso 2: Múltiples puntos
         # Evaluamos las derivadas en cada punto
         
@@ -435,8 +512,13 @@ def deriva2(fun, puntos, h):
         raise ValueError('Puntos y h no pueden ser vectores simultáneamente')
     
     # Redondeo de resultados a 2 decimales para mejor presentación
-    # Maneja tanto listas de listas como listas simples
-    der2 = [[round(float(x), 2) for x in lista] for lista in der2]
+    # Verificar si der2 es una lista de listas o lista simple
+    if isinstance(der2[0], list):
+        # Casos 1 y 2: lista de listas
+        der2 = [[round(float(x), 2) for x in lista] for lista in der2]
+    else:
+        # Caso 3: lista simple
+        der2 = [round(float(x), 2) for x in der2]
     
     return der2
 

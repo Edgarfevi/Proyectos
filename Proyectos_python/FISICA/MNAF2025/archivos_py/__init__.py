@@ -2,18 +2,21 @@ import time
 import asyncio
 
 
-async def tarea1():
-    print("Tarea iniciada...")
-    await asyncio.sleep(2)
-    print("Tarea completada.")
+def Tarea1():
+    print("Iniciando tarea 1...")
+    finish = False
+    while finish == False:
+        break
+    print("Tarea 1 completada.")
 
-def tarea2():
-    print("Tarea 2 iniciada...")
-    time.sleep(1)
-    print("Tarea 2 completada.")
 
-async def main():
-    print("Starting main function...")
-    await tarea1()
-    tarea2()
-    print("Main function completed.")
+Tarea1()
+
+
+
+def main():
+    print("Hola, mundo desde MNAF2025!")
+    finish = False
+    while finish == False:
+        break
+    print("Programa finalizado.")
