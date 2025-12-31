@@ -968,6 +968,246 @@ def ensolver(funx, a, b, meth='rf', maxiter=128, Ex=1e-9, ex=1e-6, EF=1e-12):
     return r, info, suc
 
 
+def enlsteffensen(funx, x0, maxiter=128, Ex=1e-9, ex=1e-5, EF=1e-12):
+    '''
+    Resuelve ecuaciones no lineales mediante el método de Steffensen.
+    
+    El método de Steffensen es una variante del método de punto fijo que acelera
+    la convergencia mediante la función:
+    
+    g_st(x) = x - f(x) / h(x)
+    
+    donde h(x) = f(x + f(x)) / f(x) - 1
+    
+    CONDICIÓN DE CONVERGENCIA:
+    La condición -1 < g'(x) < 0 es suficiente para garantizar la convergencia.
+    Valores de gx muy alejados del rango [-2, 1] indican probable divergencia.
+    
+    PARÁMETROS DE LA FUNCIÓN
+    -------------------------
+    funx: función cuyo cero se desea determinar
+    x0: punto inicial de la iteración
+    maxiter: número máximo de iteraciones permitidas [128 por defecto]
+    Ex: tolerancia absoluta del punto [1e-9 por defecto]
+    ex: tolerancia relativa del punto [1e-5 por defecto]
+    EF: tolerancia para el valor de la función [1e-12 por defecto]
+    
+    RETORNO
+    -------
+    r: cero aproximado de la función
+    info: código de terminación
+          0: tolerancia del punto (xtol) alcanzada
+          1: tolerancia de la función (EF) alcanzada
+          2: número máximo de iteraciones alcanzado
+    suc: lista con la sucesión de aproximaciones {xn}
+    '''
+    
+    # ========================================================================
+    # INICIALIZACIÓN
+    # ========================================================================
+    
+    # Lista para almacenar la sucesión de aproximaciones
+    suc = []
+    
+    # Punto inicial
+    xk_1 = x0  # xk-1 (punto anterior)
+    
+    # Código de terminación por defecto (maxiter alcanzado)
+    info = 2
+    
+    # ========================================================================
+    # ALGORITMO: Repetir para k desde 1 hasta n (maxiter)
+    # ========================================================================
+    
+    for k in range(1, maxiter + 1):
+        
+        # * Paso 1: Asignar fx ← f(xk-1)
+        fx = funx(xk_1)
+        
+        # * Paso 2: Si |fx| < εF, finalizar r = xk-1
+        if abs(fx) < EF:
+            r = xk_1
+            info = 1  # Tolerancia de la función alcanzada
+            return r, info, suc
+        
+        # * Paso 3: Asignar fy ← f(xk-1 + fx), gx ← fy/fx - 1
+        # Evaluamos la función en el punto perturbado
+        fy = funx(xk_1 + fx)
+        
+        # Calculamos el factor gx = h(x)
+        # Este es el denominador en la fórmula de Steffensen
+        gx = fy / fx - 1
+        
+        # * Paso 4: Si gx ∉ [-2, 1], aviso probable divergencia
+        # Valores fuera de este rango pueden indicar problemas de convergencia
+        if gx < -2 or gx > 1:
+            print(f"⚠ Iteración {k}: Aviso de probable divergencia (gx = {gx:.6f})")
+        
+        # Verificar que gx no sea cero (evitar división por cero)
+        if abs(gx) < 1e-15:
+            print(f"⚠ Iteración {k}: gx ≈ 0, no se puede continuar")
+            r = xk_1
+            info = 2
+            return r, info, suc
+        
+        # * Paso 5: Calcular xk = xk-1 - fx/gx
+        # Esta es la fórmula de iteración de Steffensen
+        xk = xk_1 - fx / gx
+        
+        # Añadimos la nueva aproximación a la sucesión
+        suc.append(xk)
+        
+        # * Paso 6: Calcular εx = máx(Ex, ex |xk|)
+        # Tolerancia adaptativa que combina absoluta y relativa
+        epsilon_x = max(Ex, ex * abs(xk))
+        
+        # * Paso 7: Si |xk - xk-1| < εx, finalizar r = xk
+        if abs(xk - xk_1) < epsilon_x:
+            r = xk
+            info = 0  # Tolerancia del punto alcanzada
+            return r, info, suc
+        
+        # Actualizamos xk-1 para la siguiente iteración
+        xk_1 = xk
+    
+    # ========================================================================
+    # PASO FINAL: Acabado el bucle sin convergencia
+    # ========================================================================
+    # Finalizar r = xn (última aproximación calculada)
+    r = suc[-1] if suc else x0
+    info = 2  # Número máximo de iteraciones alcanzado
+    
+    return r, info, suc
+
+
+def sor_interval(A):
+    '''
+    Calcula el intervalo de convergencia del método SOR (Successive Over-Relaxation)
+    y los valores óptimos del parámetro de relajación ω.
+    
+    El método SOR es una variante del método de Gauss-Seidel que introduce un
+    parámetro de relajación ω para acelerar la convergencia. La matriz de iteración SOR es:
+    
+    M_SOR = (D - ωL)^(-1) * [(1-ω)D + ωU]
+    
+    donde A = D - L - U (descomposición en diagonal, triangular inferior y superior).
+    
+    TEOREMA DE KAHAN:
+    Si A es definida positiva, el método SOR converge para ω ∈ (0, 2).
+    
+    PARÁMETROS DE LA FUNCIÓN
+    -------------------------
+    A: matriz cuadrada a estudiar (numpy array)
+    
+    RETORNO
+    -------
+    inter: intervalo [ωi, ωf] donde el método es convergente
+           (lista vacía [] si no existe convergencia)
+    ropt: valor del radio espectral mínimo ρ_mín
+          (None si no existe convergencia)
+    wopt: valor óptimo de ω que minimiza el radio espectral,
+          redondeado a la centésima
+          (None si no existe convergencia)
+    '''
+    
+    # ========================================================================
+    # PASO 0: DESCOMPOSICIÓN DE LA MATRIZ A = D - L - U
+    # ========================================================================
+    
+    # D: matriz diagonal con los elementos de la diagonal de A
+    D = np.diag(np.diag(A))
+    
+    # L: parte triangular inferior de A (con signo negativo)
+    # -np.tril(A, -1) extrae la parte estrictamente triangular inferior
+    L = -np.tril(A, -1)
+    
+    # U: parte triangular superior de A (con signo negativo)
+    # -np.triu(A, 1) extrae la parte estrictamente triangular superior
+    U = -np.triu(A, 1)
+    
+    # ========================================================================
+    # PASO 1: CREAR UN VECTOR W DE VALORES POSIBLES DE ω
+    # ========================================================================
+    
+    # Según el Teorema de Kahan, si A es definida positiva,
+    # el método SOR converge para ω ∈ (0, 2)
+    # Creamos valores equidistantes una centésima: 0.00, 0.01, 0.02, ..., 1.99
+    W = np.arange(0, 2, 0.01)
+    
+    # ========================================================================
+    # PASO 2: ASIGNAR VALORES INICIALES
+    # ========================================================================
+    
+    # Listas para almacenar los valores de ω válidos (convergentes)
+    # y sus correspondientes radios espectrales
+    w_validos = []      # Valores de ω donde ρ(M_SOR) < 1
+    radios_espectrales = []  # Radios espectrales correspondientes
+    
+    # ========================================================================
+    # PASO 3: PARA CADA VALOR w DE W
+    # ========================================================================
+    
+    for w in W:
+        
+        # a) Calcular la matriz SOR
+        # M_SOR = (D - ωL)^(-1) * [(1-ω)D + ωU]
+        
+        try:
+            # Calculamos (D - ωL)^(-1)
+            matriz_inv = la.inv(D - w * L)
+            
+            # Calculamos M_SOR = (D - ωL)^(-1) * [(1-ω)D + ωU]
+            M_SOR = np.dot(matriz_inv, (1 - w) * D + w * U)
+            
+            # b) Calcular sus autovalores y radio espectral
+            # El radio espectral ρ(M) es el máximo del valor absoluto de los autovalores
+            autovalores = la.eigvals(M_SOR)
+            radio_espectral = max(abs(autovalores))
+            
+            # c) Asignar como válido si ρ < 1
+            # El método converge si y solo si ρ(M_SOR) < 1
+            if radio_espectral < 1:
+                w_validos.append(w)
+                radios_espectrales.append(radio_espectral)
+        
+        except la.LinAlgError:
+            # Si (D - ωL) no es invertible, continuamos con el siguiente valor
+            continue
+    
+    # ========================================================================
+    # PASO 4: DEVOLVER LOS VALORES PEDIDOS
+    # ========================================================================
+    
+    # Verificar si existe algún valor de ω para el cual el método converge
+    if len(radios_espectrales) == 0:
+        # No hay convergencia para ningún valor de ω
+        return [], None, None
+    
+    # d) Comparar y/o actualizar el intervalo, ρ_mín y ω(ρ_mín)
+    
+    # Convertimos a array para facilitar operaciones
+    w_validos = np.array(w_validos)
+    radios_espectrales = np.array(radios_espectrales)
+    
+    # Encontrar el radio espectral mínimo
+    rho_min = radios_espectrales.min()
+    
+    # Encontrar el índice donde se alcanza el mínimo
+    idx_min = radios_espectrales.argmin()
+    
+    # El valor óptimo de ω es el que minimiza el radio espectral
+    w_optimo = w_validos[idx_min]
+    
+    # El intervalo de convergencia es [ω_inicial, ω_final]
+    intervalo = [w_validos.min(), w_validos.max()]
+    
+    # Redondear w_optimo a la centésima (ya debería estarlo por construcción)
+    w_optimo = round(w_optimo, 2)
+    
+    return intervalo, rho_min, w_optimo
+
+
+
 def autoval_potencia(A, delta=np.inf, tol=1E-6, niter=100):
     """
     Calcula el autovalor más próximo al valor indicado mediante el método de la potencia 
