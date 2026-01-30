@@ -8,11 +8,15 @@ class dinamica_particulas_confinada_2D:
     """
     
     """
-    def __init__(self, N_particulas, radio_particula, l_caja, v_0 = 1.0):
+    def __init__(self, N_particulas, radio_particula, l_caja, v_0 = 1.0,m = 1.0):
+        """
+        
+        """
         self.N = N_particulas
         self.r_radio = radio_particula
         self.l_c = l_caja
         self.v_0 = v_0
+        self.m = m
         def inicializar_variables_necesarias():
             """
             Inicializa las variables necesarias para la simulacion:
@@ -32,7 +36,7 @@ class dinamica_particulas_confinada_2D:
                     'velocidad': np.zeros(2)
                 }
             # Inicializamos las posiciones
-            posiciones = np.random.rand(self.N, 2) * self.l_c
+            posiciones = np.random.rand(self.N, 2) * (self.l_c - 2*self.r_radio)
             # Inicializamos las velocidades
             angulos = np.random.rand(self.N) * 2 * np.pi
             velocidades = np.zeros((self.N, 2))
@@ -63,7 +67,7 @@ class dinamica_particulas_confinada_2D:
         """
         
         """
-        if choques == False:
+        if choques == 'no':
             Posiciones_totales = {}
             velocidades = {}
             for i in range(self.N):
@@ -76,12 +80,13 @@ class dinamica_particulas_confinada_2D:
                         Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] + velocidades[f"particula_{i}"] * delta_t
                         # Verificar colisiones con paredes y ajustar velocidad
                         for dim in range(2): # 0 = x, 1 = y
-                                if Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] <= 0:
+                                if Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] <= 0 + self.r_radio:
                                     velocidades[f"particula_{i}"][dim] *= -1
-                                elif Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] >= self.l_c:
+                                elif Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] >= self.l_c - self.r_radio:
                                     velocidades[f"particula_{i}"][dim] *= -1
-                self.dinamica_sin_choques = Posiciones_totales
-                return Posiciones_totales
+            self.dinamica_sin_choques = Posiciones_totales
+            self.velocidades_finales = velocidades
+            return Posiciones_totales
         else:
             Posiciones_totales = {}
             velocidades = {}
@@ -103,8 +108,11 @@ class dinamica_particulas_confinada_2D:
                                 velocidad_normal_j = velocidades[f"particula_{j}"] - velocidad_tangencial_j
                                 velocidad_normal_k = velocidades[f"particula_{k}"] - velocidad_tangencial_k
 
-                                velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
-                                velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
+                                if np.dot(velocidades[f"particula_{k}"], vector_unitario) - np.dot(velocidades[f"particula_{j}"], vector_unitario) < 0:
+                                    velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
+                                    velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
+                                else:
+                                    continue
                             else:
                                 continue
                 
@@ -119,14 +127,15 @@ class dinamica_particulas_confinada_2D:
                         Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] + velocidades[f"particula_{i}"] * delta_t
                         # Verificar colisiones con paredes y ajustar velocidad
                         for dim in range(2): # 0 = x, 1 = y
-                            if Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] <= 0:
+                            if Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] <= 0 + self.r_radio:
                                 velocidades[f"particula_{i}"][dim] *= -1
-                            elif Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] >= self.l_c:
+                            elif Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] >= self.l_c - self.r_radio:
                                 velocidades[f"particula_{i}"][dim] *= -1
             self.dinamica_con_choques = Posiciones_totales
+            self.velocidades_finales = velocidades
             return Posiciones_totales
 
-    def generar_animacion(self, distancia_frame, cant_frames,tiempo_frame, chocan = False):
+    def generar_animacion(self, distancia_frame, cant_frames,tiempo_frame, chocan = 'no'):
         """
         Docstring for generar_animacion
         
@@ -147,7 +156,7 @@ class dinamica_particulas_confinada_2D:
                 particula.set_data([], [])
             return Particulas
 
-        if chocan == False:
+        if chocan == 'no':
             def animate(frame):
                 paso = frame * distancia_frame
                 for i, particula in enumerate(Particulas):
@@ -163,10 +172,56 @@ class dinamica_particulas_confinada_2D:
         self.animacion = FuncAnimation(fig, animate, init_func=init, frames=cant_frames, 
                     blit=True, interval=tiempo_frame*1000, repeat=True)
         plt.show()
+    
+    def histograma_energia(self,choques = 'si'):
+        """
+        Docstring for histograma_energia
+        :param self: Description
+        """
+        Energias = {}
+        for particulas in range(self.N):
+            velocidad_final = self.velocidades_finales[f"particula_{particulas}"]
+            energia_cinetica = 0.5 * self.m * (np.linalg.norm(velocidad_final))**2
+            Energias[f"particula_{particulas}"] = energia_cinetica
+        energias_array = np.array(list(Energias.values()))
+        plt.figure(figsize=(8,6))
+        plt.hist(energias_array, bins=25, edgecolor='black',range=(0, 1))
+        plt.title('Histograma de Energías Cinéticas Finales')
+        plt.xlabel('Energía Cinética')
+        plt.ylabel('Número de Partículas')
+        plt.show()
+        if choques == 'si':
+            Energia_total_final = np.sum(energias_array)
+
+            velocidad_inicial = np.zeros((self.N,2))
+            Energias_iniciales = np.zeros(self.N)
+            for particulas in range(self.N):
+                velocidad_inicial[particulas] = self.situacion_inicial[f"particula_{particulas}"]['velocidad']
+                Energias_iniciales[particulas] = 0.5 * self.m * (np.linalg.norm(velocidad_inicial[particulas]))**2
+            Energias_iniciales_total = np.sum(Energias_iniciales) 
+            print(f"Energía Cinética Total Inicial: {Energias_iniciales_total}")
+            print(f"Energía Cinética Total Final: {Energia_total_final}")
+        return None
+    def comprobar_velocidades_finales(self):
+        """
+        Docstring for comprobar_velocidades_finales
+        :param self: Description
+        """
+        velocidad_final = np.zeros((self.N,2))
+        velocid_inicial = np.zeros((self.N,2))
+        for particula in range(self.N):
+            velocidad_final[particula] = self.velocidades_finales[f"particula_{particula}"]
+            velocid_inicial[particula] = self.situacion_inicial[f"particula_{particula}"]['velocidad']
+            
+            print(velocidad_final == velocid_inicial)
+            
+        return None
 
 
+Dinamica = dinamica_particulas_confinada_2D(N_particulas=60, radio_particula=0.01, l_caja=1.0, v_0=0.5)
+Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= 'si')
 
-Dinamica = dinamica_particulas_confinada_2D(N_particulas=10, radio_particula=0.01, l_caja=1.0, v_0=0.1)
-Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques=True)
+Dinamica.generar_animacion(10,1000,0.1,chocan = 'si')
+Dinamica.histograma_energia(choques = 'si')
 
-Dinamica.generar_animacion(10,1000,0.01,chocan=True)
+
