@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-
+import scipy.spatial as spatial
+from timeit import default_timer as timer
 
 
 class dinamica_particulas_confinada_2D:
@@ -63,7 +64,7 @@ class dinamica_particulas_confinada_2D:
                 distancias[j, i] = d # La matriz es simétrica
         return distancias
     
-    def simular_dinamica(self, n_pasos, delta_t,choques):
+    def simular_dinamica(self, n_pasos, delta_t,choques,optimized = 'no'):
         """
         
         """
@@ -91,30 +92,58 @@ class dinamica_particulas_confinada_2D:
             Posiciones_totales = {}
             velocidades = {}
             for paso in range(n_pasos):
-                rango = f"paso_{paso}"
-                if paso != 0:
-                    distancias = self.calcular_distancias_particulas(Posiciones_totales, paso)
-                        
-                    umbral = self.r_radio * 2 # Diámetro
-                    for j in range(self.N):
-                        for k in range(j + 1, self.N): # Iteramos pares únicos (j, k)
-                            if distancias[j, k] <= umbral:
-                                vector_ij = Posiciones_totales[f"particula_{k}"][f"paso_{paso-1}"] - Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"]
-                                distancia_ij = np.linalg.norm(vector_ij)
-                                vector_unitario = vector_ij / distancia_ij
+                if optimized == 'yes':
+                    if paso != 0:
+                        tstart = timer()
+                        puntos =np.zeros((self.N,2))
+                        for j in range(self.N):
+                            puntos[j,0] = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"][0]
+                            puntos[j,1] = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"][1]
+                        árbol = spatial.KDTree(puntos)
+                        pares_cercanos = árbol.query_pairs(r=2*self.r_radio)
 
-                                velocidad_tangencial_j = np.dot(velocidades[f"particula_{j}"], vector_unitario) * vector_unitario
-                                velocidad_tangencial_k = np.dot(velocidades[f"particula_{k}"], vector_unitario) * vector_unitario
-                                velocidad_normal_j = velocidades[f"particula_{j}"] - velocidad_tangencial_j
-                                velocidad_normal_k = velocidades[f"particula_{k}"] - velocidad_tangencial_k
+                        for (j, k) in pares_cercanos:
 
-                                if np.dot(velocidades[f"particula_{k}"], vector_unitario) - np.dot(velocidades[f"particula_{j}"], vector_unitario) < 0:
-                                    velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
-                                    velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
-                                else:
-                                    continue
+                            vector_ij = Posiciones_totales[f"particula_{k}"][f"paso_{paso-1}"] - Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"]
+                            distancia_ij = np.linalg.norm(vector_ij)
+                            vector_unitario = vector_ij / distancia_ij
+
+                            velocidad_tangencial_j = np.dot(velocidades[f"particula_{j}"], vector_unitario) * vector_unitario
+                            velocidad_tangencial_k = np.dot(velocidades[f"particula_{k}"], vector_unitario) * vector_unitario
+                            velocidad_normal_j = velocidades[f"particula_{j}"] - velocidad_tangencial_j
+                            velocidad_normal_k = velocidades[f"particula_{k}"] - velocidad_tangencial_k
+
+                            if np.dot(velocidades[f"particula_{k}"], vector_unitario) - np.dot(velocidades[f"particula_{j}"], vector_unitario) < 0:
+                                velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
+                                velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
                             else:
                                 continue
+                        tend = timer()
+                        print(f"Tiempo para procesar colisiones optimizadas de las 100 partículas en el paso {paso}: {tend - tstart} segundos")
+                else:
+                    if paso != 0:
+                        distancias = self.calcular_distancias_particulas(Posiciones_totales, paso)
+                            
+                        umbral = self.r_radio * 2 # Diámetro
+                        for j in range(self.N):
+                            for k in range(j + 1, self.N): # Iteramos pares únicos (j, k)
+                                if distancias[j, k] <= umbral:
+                                    vector_ij = Posiciones_totales[f"particula_{k}"][f"paso_{paso-1}"] - Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"]
+                                    distancia_ij = np.linalg.norm(vector_ij)
+                                    vector_unitario = vector_ij / distancia_ij
+
+                                    velocidad_tangencial_j = np.dot(velocidades[f"particula_{j}"], vector_unitario) * vector_unitario
+                                    velocidad_tangencial_k = np.dot(velocidades[f"particula_{k}"], vector_unitario) * vector_unitario
+                                    velocidad_normal_j = velocidades[f"particula_{j}"] - velocidad_tangencial_j
+                                    velocidad_normal_k = velocidades[f"particula_{k}"] - velocidad_tangencial_k
+
+                                    if np.dot(velocidades[f"particula_{k}"], vector_unitario) - np.dot(velocidades[f"particula_{j}"], vector_unitario) < 0:
+                                        velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
+                                        velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
+                                    else:
+                                        continue
+                                else:
+                                    continue
                 
                 for i in range(self.N):
                     if paso == 0:
@@ -148,7 +177,7 @@ class dinamica_particulas_confinada_2D:
         
         Particulas = []
         for i in range(self.N):
-            particula, =ax.plot([], [], 'o', markersize=8)
+            particula, =ax.plot([], [], 'o', markersize=10)
             Particulas.append(particula)
 
         def init():
@@ -218,10 +247,10 @@ class dinamica_particulas_confinada_2D:
         return None
 
 
-Dinamica = dinamica_particulas_confinada_2D(N_particulas=60, radio_particula=0.01, l_caja=1.0, v_0=0.5)
-Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= 'si')
+Dinamica = dinamica_particulas_confinada_2D(N_particulas=100, radio_particula=0.125, l_caja=10.0, v_0=1.0)
+Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= 'si',optimized = 'yes')
 
-Dinamica.generar_animacion(10,1000,0.1,chocan = 'si')
+Dinamica.generar_animacion(10,1000,0.01,chocan = 'si')
 Dinamica.histograma_energia(choques = 'si')
 
 
