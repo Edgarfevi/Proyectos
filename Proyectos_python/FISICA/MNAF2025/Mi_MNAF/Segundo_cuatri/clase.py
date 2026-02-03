@@ -9,16 +9,18 @@ class dinamica_particulas_confinada_2D:
     """
     
     """
-    def __init__(self, N_particulas, radio_particula, l_caja, v_0 = 1.0,m = 1.0):
+    def __init__(self, N_particulas, radio_particula, l_caja, T = 50,m = 1.0, v_0 = 1.0, Kb = 0.01):
         """
         
         """
+        
         self.N = N_particulas
         self.r_radio = radio_particula
         self.l_c = l_caja
-        self.v_0 = v_0
+        self.T = T
         self.m = m
-        def inicializar_variables_necesarias():
+        self.v_0 = np.sqrt(2 * (Kb * T) / m)
+        def inicializar_variables_necesarias(v_constante = 'si', Kb = 0.01):
             """
             Inicializa las variables necesarias para la simulacion:
             - Posiciones iniciales de las particulas (array de Nx2)
@@ -41,15 +43,31 @@ class dinamica_particulas_confinada_2D:
             # Inicializamos las velocidades
             angulos = np.random.rand(self.N) * 2 * np.pi
             velocidades = np.zeros((self.N, 2))
-            velocidades[:, 0] = self.v_0 * np.cos(angulos)
-            velocidades[:, 1] = self.v_0 * np.sin(angulos)
+            E_0 = {}
+            if v_constante == 'si':
+                velocidades[:, 0] = self.v_0 * np.cos(angulos)
+                velocidades[:, 1] = self.v_0 * np.sin(angulos)
+                for i in range(self.N):
+                    E_0[f"particula_{i}"] = 0.5 * self.m * self.v_0**2
+                
+            else:
+                En_0 = np.random.exponential(scale=Kb*self.T, size=self.N)
+                
+                for i, E in enumerate(En_0):
+                    v = np.sqrt(2 * E / self.m)
+                    velocidades[i, 0] = v * np.cos(angulos[i])
+                    velocidades[i, 1] = v * np.sin(angulos[i])
+                    E_0[f"particula_{i}"] = E
+
+            self.E_0 = E_0
+                    
             # Creamos el diccionario de variables iniciales
             for i in range(self.N):
                 Particulas[f"particula_{i}"]['posicion'] = posiciones[i]
                 Particulas[f"particula_{i}"]['velocidad'] = velocidades[i]
             return Particulas
-        
-        variables_iniciales = inicializar_variables_necesarias()
+        v_constante = input("¿Desea que las partículas tengan la misma velocidad inicial? (si/no): ")
+        variables_iniciales = inicializar_variables_necesarias(v_constante)
         self.situacion_inicial = variables_iniciales
 
     def calcular_distancias_particulas(self, Posiciones_totales, paso):
@@ -213,6 +231,7 @@ class dinamica_particulas_confinada_2D:
             energia_cinetica = 0.5 * self.m * (np.linalg.norm(velocidad_final))**2
             Energias[f"particula_{particulas}"] = energia_cinetica
         energias_array = np.array(list(Energias.values()))
+        self.E_f = Energias
         plt.figure(figsize=(8,6))
         plt.hist(energias_array, bins=25, edgecolor='black',range=(0, 1))
         plt.title('Histograma de Energías Cinéticas Finales')
@@ -246,11 +265,33 @@ class dinamica_particulas_confinada_2D:
             
         return None
 
+    def comprobar_T(self):
+        """
+        Docstring for comprobar_T
+        :param self: Description
+        """
+        Kb = 0.01
+        Prom_energia_inicial = 0
+        Prom_energia_final = 0
+        for rango in range(self.N):
+            Prom_energia_inicial += self.E_0[f"particula_{rango}"]
+            Prom_energia_final += self.E_f[f"particula_{rango}"]
+
+        T_inicial = Prom_energia_inicial/(Kb*self.N)
+        T_final = Prom_energia_final/(Kb*self.N)
+        print("Comprobación de temperaturas inicial y final:")
+        print(f"Temperatura inicial: {T_inicial}")
+        print(f"Temperatura final: {T_final}")
+        return None
+
+
+
 
 Dinamica = dinamica_particulas_confinada_2D(N_particulas=100, radio_particula=0.125, l_caja=10.0, v_0=1.0)
-Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= 'si',optimized = 'yes')
+Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= 'si',optimized = 'no')
 
 Dinamica.generar_animacion(10,1000,0.01,chocan = 'si')
 Dinamica.histograma_energia(choques = 'si')
 
+Dinamica.comprobar_T()
 
