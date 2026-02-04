@@ -5,6 +5,7 @@ import scipy.spatial as spatial
 from timeit import default_timer as timer
 
 
+
 class dinamica_particulas_confinada_2D:
     """
     Clase para simular la dinámica de partículas confinadas en un espacio bidimensional.
@@ -44,13 +45,17 @@ class dinamica_particulas_confinada_2D:
     
     Methods
     -------
+    inicializar_variables_necesarias(v_constante, Kb)
+        Genera posiciones y velocidades iniciales de las partículas
     calcular_distancias_particulas(Posiciones_totales, paso)
         Calcula la matriz de distancias entre todas las partículas
+    vectores_choque(Posiciones_totales, velocidades, i, j, paso)
+        Calcula componentes de velocidad para colisión elástica
     simular_dinamica(n_pasos, delta_t, choques, optimized)
-        Ejecuta la simulación temporal del sistema
-    generar_animacion(distancia_frame, cant_frames, tiempo_frame, chocan='no')
+        Ejecuta la simulación temporal del sistema (choques y optimized son bool)
+    generar_animacion(distancia_frame, cant_frames, tiempo_frame)
         Crea una animación visual del movimiento de las partículas
-    histograma_energia(choques='si')
+    histograma_energia()
         Genera histograma de energías y verifica conservación
     comprobar_T()
         Calcula y compara temperaturas inicial y final
@@ -92,72 +97,94 @@ class dinamica_particulas_confinada_2D:
         self.m = m
         self.v_0 = np.sqrt(2 * (Kb * T) / m)
 
-        def inicializar_variables_necesarias(v_constante = 'si', Kb = 0.01):
-            """
-            Inicializa las posiciones y velocidades de las partículas.
+    def inicializar_variables_necesarias(self,v_constante = 'si', Kb = 0.01):
+        """
+        Inicializa las posiciones y velocidades de las partículas.
+        
+        Genera las condiciones iniciales del sistema asignando posiciones
+        aleatorias dentro de la caja y velocidades según el método elegido.
+        
+        Parameters
+        ----------
+        v_constante : str, optional
+            'si' para velocidades con módulo constante v_0
+            'no' para distribución exponencial de energías (default: 'si')
+        Kb : float, optional
+            Constante de Boltzmann para distribución exponencial (default: 0.01)
+        
+        Returns
+        -------
+        dict
+            Diccionario con estructura:
+            {'particula_i': {'posicion': array([x, y]), 'velocidad': array([vx, vy])}}
+        
+        Notes
+        -----
+        - Las posiciones se generan aleatoriamente evitando las paredes
+        - Si v_constante='si': todas las partículas tienen |v| = v_0
+        - Si v_constante='no': energías siguen distribución exponencial
+        - Las direcciones de velocidad son siempre aleatorias
+        - Actualiza self.E_0 con las energías cinéticas iniciales
+        """
+        # Creamos el diccionario principal que contendrá todas las partículas
+        Particulas = {}
+        
+        # Inicializar la estructura del diccionario con arrays vacíos para cada partícula
+        for i in range(self.N):
+            Particulas[f"particula_{i}"] = {
+                'posicion': np.zeros(2),   # Vector 2D (x, y)
+                'velocidad': np.zeros(2)   # Vector 2D (vx, vy)
+            }
+        
+        # Generar posiciones aleatorias dentro de la caja, evitando que se superpongan con las paredes
+        # Rango: [r_radio, l_c - r_radio] para garantizar que toda la partícula quede dentro
+        posiciones = np.random.rand(self.N, 2) * (self.l_c - 2*self.r_radio) + self.r_radio
+        
+        # Generar ángulos aleatorios para la dirección de las velocidades (distribución uniforme)
+        angulos = np.random.rand(self.N) * 2 * np.pi
+        
+        # Inicializar array de velocidades (se llenará según el método elegido)
+        velocidades = np.zeros((self.N, 2))
+        
+        # Diccionario para almacenar energías cinéticas iniciales
+        E_0 = {}
+        
+        # CASO 1: Velocidades con módulo constante (todas las partículas con |v| = v_0)
+        if v_constante == 'si':
+            # Descomponer la velocidad v_0 en componentes x e y usando el ángulo aleatorio
+            velocidades[:, 0] = self.v_0 * np.cos(angulos)  # Componente x
+            velocidades[:, 1] = self.v_0 * np.sin(angulos)  # Componente y
             
-            Genera las condiciones iniciales del sistema asignando posiciones
-            aleatorias dentro de la caja y velocidades según el método elegido.
-            
-            Parameters
-            ----------
-            v_constante : str, optional
-                'si' para velocidades con módulo constante v_0
-                'no' para distribución exponencial de energías (default: 'si')
-            Kb : float, optional
-                Constante de Boltzmann para distribución exponencial (default: 0.01)
-            
-            Returns
-            -------
-            dict
-                Diccionario con estructura:
-                {'particula_i': {'posicion': array([x, y]), 'velocidad': array([vx, vy])}}
-            
-            Notes
-            -----
-            - Las posiciones se generan aleatoriamente evitando las paredes
-            - Si v_constante='si': todas las partículas tienen |v| = v_0
-            - Si v_constante='no': energías siguen distribución exponencial
-            - Las direcciones de velocidad son siempre aleatorias
-            - Actualiza self.E_0 con las energías cinéticas iniciales
-            """
-            Particulas = {}
+            # Todas las partículas tienen la misma energía cinética
             for i in range(self.N):
-                Particulas[f"particula_{i}"] = {
-                    'posicion': np.zeros(2),
-                    'velocidad': np.zeros(2)
-                }
-            # Inicializamos las posiciones
-            posiciones = np.random.rand(self.N, 2) * (self.l_c - 2*self.r_radio)
-            # Inicializamos las velocidades
-            angulos = np.random.rand(self.N) * 2 * np.pi
-            velocidades = np.zeros((self.N, 2))
-            E_0 = {}
-            if v_constante == 'si':
-                velocidades[:, 0] = self.v_0 * np.cos(angulos)
-                velocidades[:, 1] = self.v_0 * np.sin(angulos)
-                for i in range(self.N):
-                    E_0[f"particula_{i}"] = 0.5 * self.m * self.v_0**2
+                E_0[f"particula_{i}"] = 0.5 * self.m * self.v_0**2  # E = (1/2)mv²
+            
+        # CASO 2: Energías distribuidas exponencialmente (distribución Maxwell-Boltzmann)
+        elif v_constante == 'no':
+            # Generar N energías siguiendo distribución exponencial
+            En_0 = np.random.exponential(scale=Kb*self.T, size=self.N)
+            
+            # Para cada partícula, calcular velocidad a partir de su energía asignada
+            for i, E in enumerate(En_0):
+                v = np.sqrt(2 * E / self.m)
                 
-            else:
-                En_0 = np.random.exponential(scale=Kb*self.T, size=self.N)
+                # Descomponer en componentes usando el ángulo aleatorio
+                velocidades[i, 0] = v * np.cos(angulos[i])  # Componente x
+                velocidades[i, 1] = v * np.sin(angulos[i])  # Componente y
                 
-                for i, E in enumerate(En_0):
-                    v = np.sqrt(2 * E / self.m)
-                    velocidades[i, 0] = v * np.cos(angulos[i])
-                    velocidades[i, 1] = v * np.sin(angulos[i])
-                    E_0[f"particula_{i}"] = E
+                # Guardar la energía inicial de esta partícula
+                E_0[f"particula_{i}"] = E
 
-            self.E_0 = E_0
-                    
-            # Creamos el diccionario de variables iniciales
-            for i in range(self.N):
-                Particulas[f"particula_{i}"]['posicion'] = posiciones[i]
-                Particulas[f"particula_{i}"]['velocidad'] = velocidades[i]
-            return Particulas
-        v_constante = input("¿Desea que las partículas tengan la misma velocidad inicial? (si/no): ")
-        variables_iniciales = inicializar_variables_necesarias(v_constante)
-        self.situacion_inicial = variables_iniciales
+        # Guardar las energías iniciales como atributo de la clase
+        self.E_0 = E_0
+        
+        # Asignar las posiciones y velocidades generadas al diccionario de partículas
+        for i in range(self.N):
+            Particulas[f"particula_{i}"]['posicion'] = posiciones[i]
+            Particulas[f"particula_{i}"]['velocidad'] = velocidades[i]
+        
+        self.situacion_inicial = Particulas
+        return Particulas
 
     def calcular_distancias_particulas(self, Posiciones_totales, paso):
         """
@@ -182,20 +209,100 @@ class dinamica_particulas_confinada_2D:
         La matriz es simétrica (distancias[i,j] = distancias[j,i])
         Solo se calculan las distancias de la mitad superior para eficiencia
         """
-        # Definimos el tamaño de la matriz que contendrá las distancias
+        # Obtener el número total de partículas
         n_part = self.N
+        
+        # Crear matriz cuadrada NxN inicializada en ceros
+        # Esta matriz almacenará todas las distancias entre pares de partículas
         distancias = np.zeros((n_part, n_part))
 
-        # Iteramos para poder calcular las distancias entre particulas
+        # Iterar sobre todas las partículas
         for i in range(n_part):
-            for j in range(i+1, n_part): # Solo calculamos la mitad superior
-
-                # Calculamos la norma entre la resta de posiciones
-                d = np.linalg.norm(Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] - Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"])
+            # Iterar solo sobre partículas j > i el resto irá por simetría
+            for j in range(i+1, n_part):
+                
+                # Obtener las posiciones de las partículas i y j en el paso anterior (paso-1)
+                pos_i = Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"]
+                pos_j = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"]
+                
+                # Calcular el vector diferencia y obtenemos su norma (distancia)
+                d = np.linalg.norm(pos_j - pos_i)
+                
+                # Almacenar la distancia en la posición [i,j] (mitad superior)
                 distancias[i, j] = d
-                distancias[j, i] = d # La matriz es simétrica
+                
+                # Por simetría, almacenar la misma distancia en [j,i] (mitad inferior)
+                # Esto completa la matriz (matriz simétrica)
+                distancias[j, i] = d
+                
         return distancias
     
+    def vectores_choque(self,Posiciones_totales, velocidades, i, j,paso):
+        """
+        Calcula los componentes de velocidad para colisión elástica entre dos partículas.
+        
+        Descompone las velocidades de las partículas i y j en componentes tangencial
+        y normal respecto al vector que las une. Esta descomposición es necesaria para
+        aplicar las leyes de conservación en colisiones elásticas.
+        
+        Parameters
+        ----------
+        Posiciones_totales : dict
+            Diccionario con todas las posiciones: {'particula_i': {'paso_j': array([x, y])}}
+        velocidades : dict
+            Diccionario con velocidades actuales: {'particula_i': array([vx, vy])}
+        i : int
+            Índice de la primera partícula en la colisión
+        j : int
+            Índice de la segunda partícula en la colisión
+        paso : int
+            Paso temporal actual en la simulación
+        
+        Returns
+        -------
+        velocidad_tangencial_i : numpy.ndarray
+            Componente de velocidad de partícula i en dirección del vector i→j
+        velocidad_tangencial_j : numpy.ndarray
+            Componente de velocidad de partícula j en dirección del vector i→j
+        velocidad_normal_i : numpy.ndarray
+            Componente de velocidad de partícula i perpendicular al vector i→j
+        velocidad_normal_j : numpy.ndarray
+            Componente de velocidad de partícula j perpendicular al vector i→j
+        vector_unitario : numpy.ndarray
+            Vector unitario en dirección de i hacia j
+        
+        Notes
+        -----
+        En una colisión elástica:
+        - Las componentes normales se conservan
+        - Las componentes tangenciales se intercambian
+        - Este método calcula la descomposición necesaria para ese intercambio
+        """
+        
+        # PASO 1: Calcular el vector que une las dos partículas
+        # vector_ij = r_j - r_i (apunta desde la partícula i hacia la partícula j)
+        vector_ij = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"] - Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"]
+        
+        # PASO 2: Calcular la distancia entre las partículas i y j (módulo del vector)
+        distancia_ij = np.linalg.norm(vector_ij)
+        
+        # PASO 3: Normalizar el vector para obtener la dirección unitaria
+        vector_unitario = vector_ij / distancia_ij
+
+        # PASO 4: Calcular componente TANGENCIAL de cada velocidad
+        # La componente tangencial es la proyección de la velocidad sobre el vector_unitario
+        # Es la velocidad en la dirección de choque
+        velocidad_tangencial_j = np.dot(velocidades[f"particula_{j}"], vector_unitario) * vector_unitario
+        velocidad_tangencial_i = np.dot(velocidades[f"particula_{i}"], vector_unitario) * vector_unitario
+        
+        # PASO 5: Calcular componente NORMAL (perpendicular) de cada velocidad
+        # Esta componente NO cambia durante la colisión elástica
+        velocidad_normal_j = velocidades[f"particula_{j}"] - velocidad_tangencial_j
+        velocidad_normal_i = velocidades[f"particula_{i}"] - velocidad_tangencial_i
+
+        # Retornar todos los componentes necesarios para calcular las nuevas velocidades post-colisión
+        return velocidad_tangencial_i, velocidad_tangencial_j, velocidad_normal_i, velocidad_normal_j, vector_unitario
+
     
     def simular_dinamica(self, n_pasos, delta_t,choques,optimized):
         """
@@ -211,12 +318,12 @@ class dinamica_particulas_confinada_2D:
             Número de pasos temporales a simular
         delta_t : float
             Incremento de tiempo entre pasos consecutivos
-        choques : str
-            'si' para incluir colisiones entre partículas
-            'no' para solo considerar colisiones con paredes
-        optimized : str
-            'yes' para usar algoritmo KDTree (eficiente para muchas partículas)
-            'no' para cálculo directo de todas las distancias
+        choques : bool
+            True para incluir colisiones entre partículas
+            False para solo considerar colisiones con paredes
+        optimized : bool
+            True para usar algoritmo KDTree (O(N log N), eficiente para muchas partículas)
+            False para cálculo directo de todas las distancias (O(N²))
         
         Returns
         -------
@@ -226,132 +333,179 @@ class dinamica_particulas_confinada_2D:
         
         Notes
         -----
-        - Actualiza self.dinamica_sin_choques o self.dinamica_con_choques
+        - Solicita al usuario la distribución de velocidades iniciales mediante input()
+        - Actualiza self.dinamica_choques o self.dinamica_sin_choques según el caso
         - Actualiza self.velocidades_finales con las velocidades al final
-        - Las colisiones son perfectamente elásticas
-        - Existe un algoritmo optimizado
-        - Imprime tiempo de procesamiento por paso cuando choques='si'
+        - Actualiza self.tipo_dinamica con el valor de choques
+        - Las colisiones son perfectamente elásticas (conservan energía y momento)
+        - Imprime tiempo de procesamiento por paso en cada iteración
+        - El algoritmo optimizado usa KDTree para detectar solo pares cercanos
+        
+        Warnings
+        --------
+        Esta función solicita input del usuario durante la ejecución, lo cual
+        puede no ser deseable para ejecución en batch o testing automatizado.
         
         See Also
         --------
         calcular_distancias_particulas : Método auxiliar para versión no optimizada
+        vectores_choque : Calcula componentes de velocidad para colisiones
         """
-        if choques == 'no': # Caso sin choques entre particulas
-            # Diccionario para guardar todas las posiciones en todos los pasos
-            Posiciones_totales = {}
-            
-            # Diccionario para guardar la velocidad en cada paso, se actualiza no las guarda todas
-            velocidades = {}
 
-            # iteramos para poder actualizar la posicion de las N particulas
+        # Solicitar al usuario qué distribución de velocidades usar
+        v_constante = input("¿Desea que las partículas tengan la misma velocidad inicial? (si/no): ")
+        
+        # Generar condiciones iniciales (posiciones y velocidades)
+        self.inicializar_variables_necesarias(v_constante)
+
+        # Diccionario para almacenar todas las posiciones en cada paso temporal
+        # Estructura: {'particula_i': {'paso_j': array([x, y])}}
+        Posiciones_totales = {}
+        
+        # Diccionario para almacenar las velocidades actuales de cada partícula
+        # Estructura: {'particula_i': array([vx, vy])}
+        velocidades = {}
+        
+        # Bucle principal sobre todos los pasos temporales
+        for paso in range(n_pasos):
+            
+            # Iterar sobre todas las partículas para actualizar sus posiciones
             for i in range(self.N):
-                
-                Posiciones_totales[f"particula_{i}"] = {}
-                velocidades[f"particula_{i}"] = self.situacion_inicial[f"particula_{i}"]['velocidad']
-                for paso in range(n_pasos):
-                    if paso == 0: # Si el paso es 0 tenemos que acceder a la situación inicial
-                        Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = self.situacion_inicial[f"particula_{i}"]['posicion']
-                    else:
+                # --- PASO 0: Inicializar con condiciones iniciales ---
+                if paso == 0:
+                    # Crear diccionario para almacenar la trayectoria de esta partícula
+                    Posiciones_totales[f"particula_{i}"] = {}
+                    
+                    # Asignar velocidad inicial desde las condiciones iniciales
+                    velocidades[f"particula_{i}"] = self.situacion_inicial[f"particula_{i}"]['velocidad']
+                    
+                    # Asignar posición inicial
+                    Posiciones_totales[f"particula_{i}"][f"paso_0"] = self.situacion_inicial[f"particula_{i}"]['posicion']
+                    
+                # PASOS SIGUIENTES: calcular nuevas posiciones
+                else:
+
+                    # Calcular nueva posición usando la velocidad actual y el paso de tiempo
+                    Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] + velocidades[f"particula_{i}"] * delta_t
+                    
+                    # COLISIONES CON PAREDES
+                    # Verificar si la partícula choca con alguna pared de la caja
+                    for dim in range(2):  # Iterar sobre dimensiones: 0=x, 1=y
                         
-                        Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] + velocidades[f"particula_{i}"] * delta_t
-                        # Verificar colisiones con paredes y ajustar velocidad
-                        for dim in range(2): # 0 = x, 1 = y
-                                if Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] <= 0 + self.r_radio:
-                                    velocidades[f"particula_{i}"][dim] *= -1
-                                elif Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] >= self.l_c - self.r_radio:
-                                    velocidades[f"particula_{i}"][dim] *= -1
+                        # Verificar si la partícula toca o atraviesa paredes
+                        if Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] <= 0 + self.r_radio or Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] >= self.l_c - self.r_radio:
+                            # Invertir componente de velocidad (rebote elástico)
+                            velocidades[f"particula_{i}"][dim] *= -1
+                            
+                            # Corregir posición para evitar que la partícula quede fuera de los límites
+                            # np.clip asegura que: r_radio <= posición <= l_c - r_radio
+                            Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] = np.clip(
+                                Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim], 
+                                self.r_radio, 
+                                self.l_c - self.r_radio
+                            )
+
+                        else:
+                            continue
+
+            # INICIO DE MEDICIÓN DE TIEMPO DE PROCESAMIENTO
+            tstart = timer()
+            
+            # OPCIÓN 1: ALGORITMO OPTIMIZADO CON KDTREE
+            if optimized and choques == True:
+                
+                if paso != 0:
+                    # Convertir posiciones del diccionario a array NumPy para KDTree
+                    puntos = np.zeros((self.N, 2))
+                    for j in range(self.N):
+                        puntos[j, 0] = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"][0]  # Coordenada x
+                        puntos[j, 1] = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"][1]  # Coordenada y
+                    
+                    # Construir árbol KDTree para búsqueda espacial eficiente
+                    árbol = spatial.KDTree(puntos)
+                    
+                    # Buscar todos los pares de partículas a distancia <= 2*r_radio (posible colisión)
+                    # query_pairs solo retorna pares únicos (j < k), evitando duplicados
+                    pares_cercanos = árbol.query_pairs(r=2*self.r_radio)
+
+                    # Procesar cada par de partículas que están suficientemente cerca
+                    for (j, k) in pares_cercanos:
+
+                        # Descomponer velocidades en componentes tangencial y normal
+                        velocidad_tangencial_j, velocidad_tangencial_k, velocidad_normal_j, velocidad_normal_k, vector_unitario = self.vectores_choque(Posiciones_totales, velocidades, j, k, paso)
+
+                        # Verificar si las partículas se están acercando (no alejando)
+                        if np.dot(velocidades[f"particula_{k}"], vector_unitario) - np.dot(velocidades[f"particula_{j}"], vector_unitario) < 0:
+                            # Intercambiar componentes tangenciales (mantener normales)
+                            # Velocidad nueva = componente tangencial de la otra + componente normal propia
+                            velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
+                            velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
+                        else:
+                            continue
+                    
+                    
+            # OPCIÓN 2: ALGORITMO NO OPTIMIZADO (FUERZA BRUTA)
+            elif choques == True:
+                if paso != 0:
+                    # Calcular matriz completa de distancias NxN
+                    distancias = self.calcular_distancias_particulas(Posiciones_totales, paso)
+                    
+                    # Definir umbral de colisión: suma de radios = diámetro
+                    umbral = self.r_radio * 2
+                    
+                    # Iterar sobre todos los pares de partículas (j, k) con j < k
+                    for j in range(self.N):
+                        for k in range(j + 1, self.N):  # Solo revisar mitad superior para evitar duplicados
+                            # Verificar si la distancia es menor o igual al umbral (hay contacto)
+                            if distancias[j, k] <= umbral:
+                                
+                                # Descomponer velocidades en componentes tangencial y normal
+                                velocidad_tangencial_j, velocidad_tangencial_k, velocidad_normal_j, velocidad_normal_k, vector_unitario = self.vectores_choque(Posiciones_totales, velocidades, j, k, paso)
+
+                                # Verificar si las partículas se están acercando
+                                # (mismo criterio que en versión optimizada)
+                                if np.dot(velocidades[f"particula_{k}"], vector_unitario) - np.dot(velocidades[f"particula_{j}"], vector_unitario) < 0:
+                                    # Actualizar velocidades después de la colisión elástica
+                                    velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
+                                    velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
+                                else:
+                                    continue
+                            else:
+                                continue
+
+            # OPCIÓN 3: SIN COLISIONES ENTRE PARTÍCULAS
+            # Solo se consideran colisiones con paredes (ya procesadas arriba)
+            else:
+                continue
+
+            # Finalizar medición de tiempo y mostrar estadísticas
+            tend = timer()
+            print(f"Tiempo para procesar colisiones de las {self.N} partículas en el paso {paso}: {tend - tstart} segundos")
+
+        # ALMACENAMIENTO DE RESULTADOS
+        # Guardar el tipo de simulación realizada (con o sin colisiones)
+        self.tipo_dinamica = choques
+        
+        # Almacenar resultados en el atributo apropiado según el tipo de simulación
+        if choques == True:
+            # Simulación CON colisiones entre partículas
+            self.dinamica_choques = Posiciones_totales
+            self.velocidades_finales = velocidades
+            return Posiciones_totales
+        
+        else:
+            # Simulación SIN colisiones entre partículas (solo con paredes)
             self.dinamica_sin_choques = Posiciones_totales
             self.velocidades_finales = velocidades
             return Posiciones_totales
-        else:
-            Posiciones_totales = {}
-            velocidades = {}
-            for paso in range(n_pasos):
-                tstart = timer()
-                if optimized == 'yes':
-                    if paso != 0:
-                        
-                        puntos =np.zeros((self.N,2))
-                        for j in range(self.N):
-                            puntos[j,0] = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"][0]
-                            puntos[j,1] = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"][1]
-                        árbol = spatial.KDTree(puntos)
-                        pares_cercanos = árbol.query_pairs(r=2*self.r_radio)
 
-                        for (j, k) in pares_cercanos:
-
-                            vector_ij = Posiciones_totales[f"particula_{k}"][f"paso_{paso-1}"] - Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"]
-                            distancia_ij = np.linalg.norm(vector_ij)
-                            vector_unitario = vector_ij / distancia_ij
-
-                            velocidad_tangencial_j = np.dot(velocidades[f"particula_{j}"], vector_unitario) * vector_unitario
-                            velocidad_tangencial_k = np.dot(velocidades[f"particula_{k}"], vector_unitario) * vector_unitario
-                            velocidad_normal_j = velocidades[f"particula_{j}"] - velocidad_tangencial_j
-                            velocidad_normal_k = velocidades[f"particula_{k}"] - velocidad_tangencial_k
-
-                            if np.dot(velocidades[f"particula_{k}"], vector_unitario) - np.dot(velocidades[f"particula_{j}"], vector_unitario) < 0:
-                                velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
-                                velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
-                            else:
-                                continue
-                        
-                        
-                else:
-                    if paso != 0:
-                        distancias = self.calcular_distancias_particulas(Posiciones_totales, paso)
-                            
-                        umbral = self.r_radio * 2 # Diámetro
-                        for j in range(self.N):
-                            for k in range(j + 1, self.N): # Iteramos pares únicos (j, k)
-                                if distancias[j, k] <= umbral:
-                                    vector_ij = Posiciones_totales[f"particula_{k}"][f"paso_{paso-1}"] - Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"]
-                                    distancia_ij = np.linalg.norm(vector_ij)
-                                    vector_unitario = vector_ij / distancia_ij
-
-                                    velocidad_tangencial_j = np.dot(velocidades[f"particula_{j}"], vector_unitario) * vector_unitario
-                                    velocidad_tangencial_k = np.dot(velocidades[f"particula_{k}"], vector_unitario) * vector_unitario
-                                    velocidad_normal_j = velocidades[f"particula_{j}"] - velocidad_tangencial_j
-                                    velocidad_normal_k = velocidades[f"particula_{k}"] - velocidad_tangencial_k
-
-                                    if np.dot(velocidades[f"particula_{k}"], vector_unitario) - np.dot(velocidades[f"particula_{j}"], vector_unitario) < 0:
-                                        velocidades[f"particula_{j}"] = velocidad_tangencial_k + velocidad_normal_j 
-                                        velocidades[f"particula_{k}"] = velocidad_tangencial_j + velocidad_normal_k
-                                    else:
-                                        continue
-                                else:
-                                    continue
-                
-                
-                
-                for i in range(self.N):
-                    if paso == 0:
-                        Posiciones_totales[f"particula_{i}"] = {}
-                        velocidades[f"particula_{i}"] = self.situacion_inicial[f"particula_{i}"]['velocidad']
-                        Posiciones_totales[f"particula_{i}"][f"paso_0"] = self.situacion_inicial[f"particula_{i}"]['posicion']
-                    else:
-                        
-
-                        Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] + velocidades[f"particula_{i}"] * delta_t
-                        # Verificar colisiones con paredes y ajustar velocidad
-                        for dim in range(2): # 0 = x, 1 = y
-                            if Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] <= 0 + self.r_radio:
-                                velocidades[f"particula_{i}"][dim] *= -1
-                            elif Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] >= self.l_c - self.r_radio:
-                                velocidades[f"particula_{i}"][dim] *= -1
-
-                tend = timer()
-                print(f"Tiempo para procesar colisiones de las {self.N} partículas en el paso {paso}: {tend - tstart} segundos")
-
-            self.dinamica_con_choques = Posiciones_totales
-            self.velocidades_finales = velocidades
-            return Posiciones_totales
-
-    def generar_animacion(self, distancia_frame, cant_frames,tiempo_frame, chocan = 'no'):
+    def generar_animacion(self, distancia_frame, cant_frames,tiempo_frame):
         """
         Genera y muestra una animación del movimiento de las partículas.
         
         Crea una visualización animada del sistema usando los datos de la
-        simulación previamente ejecutada.
+        simulación previamente ejecutada. Selecciona automáticamente la fuente
+        de datos según el tipo de simulación realizada (con o sin colisiones).
         
         Parameters
         ----------
@@ -362,9 +516,6 @@ class dinamica_particulas_confinada_2D:
             Número total de frames en la animación
         tiempo_frame : float
             Duración de cada frame en segundos
-        chocan : str, optional
-            'si' para animar la dinámica con colisiones entre partículas
-            'no' para animar sin colisiones (default: 'no')
         
         Returns
         -------
@@ -374,61 +525,124 @@ class dinamica_particulas_confinada_2D:
         Notes
         -----
         - Requiere haber ejecutado simular_dinamica() previamente
-        - La animación se repite indefinidamente
+        - Usa self.tipo_dinamica para determinar qué datos visualizar:
+          * Si False: visualiza self.dinamica_sin_choques
+          * Si True: visualiza self.dinamica_choques
+        - La animación se repite indefinidamente (repeat=True)
         - Actualiza self.animacion con el objeto FuncAnimation
         - El tamaño de la figura es 10x10 pulgadas
-        - Las partículas se muestran como círculos azules
+        - Las partículas se muestran como círculos (markersize=10)
+        - Los límites de los ejes se ajustan al tamaño de la caja (l_c)
         
         Raises
         ------
+        AttributeError
+            Si no se ha ejecutado simular_dinamica() antes (falta self.tipo_dinamica)
         KeyError
-            Si no se ha ejecutado la simulación correspondiente antes
+            Si no existen los datos de simulación correspondientes
+        
+        See Also
+        --------
+        simular_dinamica : Debe ejecutarse antes para generar los datos de posición
         """
+        # CONFIGURACIÓN DE LA FIGURA Y EJES
+        # Crear figura cuadrada de 10x10 pulgadas para visualizar la simulación
         fig, ax = plt.subplots(figsize=(10,10))
-        ax.set_xlim(0, self.l_c)
-        ax.set_ylim(0, self.l_c)
+        
+        # Configurar límites de los ejes para que coincidan con el tamaño de la caja
+        ax.set_xlim(0, self.l_c)  # Límite en x: [0, l_c]
+        ax.set_ylim(0, self.l_c)  # Límite en y: [0, l_c]
+        
+        # Mantener relación de aspecto 1:1 (cuadrado perfecto, sin distorsión)
         ax.set_aspect('equal')
         
+        # CREAR OBJETOS GRÁFICOS PARA LAS PARTÍCULAS
+        # Lista para almacenar los objetos Line2D que representan cada partícula
         Particulas = []
         for i in range(self.N):
-            particula, =ax.plot([], [], 'o', markersize=10)
+            # Crear un objeto de ploteo para cada partícula (inicialmente vacío)
+            # 'o' = marcador circular, markersize=10 define el tamaño visual
+            particula, = ax.plot([], [], 'o', markersize=10)
             Particulas.append(particula)
 
+        # FUNCIÓN DE INICIALIZACIÓN DE LA ANIMACIÓN
         def init():
+            """
+            Función llamada al inicio de la animación para configurar el estado inicial.
+            Limpia todos los datos de las partículas antes de comenzar.
+            """
             for particula in Particulas:
-                particula.set_data([], [])
+                particula.set_data([], [])  # Establecer posiciones vacías
             return Particulas
 
-        if chocan == 'no':
+        # SELECCIÓN DE FUENTE DE DATOS SEGÚN TIPO DE SIMULACIÓN
+        
+        # CASO 1: Simulación SIN colisiones entre partículas
+        if self.tipo_dinamica == False:
             def animate(frame):
+                """
+                Función de actualización de animación para dinámica sin choques.
+                
+                Parameters
+                ----------
+                frame : int
+                    Número de frame actual (0 a cant_frames-1)
+                """
+                # Calcular qué paso temporal corresponde a este frame
+                # Ejemplo: si distancia_frame=10 y frame=5, mostramos paso 50
                 paso = frame * distancia_frame
+                
+                # Actualizar posición de cada partícula
                 for i, particula in enumerate(Particulas):
-                    particula.set_data([self.dinamica_sin_choques[f"particula_{i}"][f"paso_{paso}"][0]], [self.dinamica_sin_choques[f"particula_{i}"][f"paso_{paso}"][1]])
+                    # Extraer coordenadas x e y del diccionario de posiciones
+                    x = self.dinamica_sin_choques[f"particula_{i}"][f"paso_{paso}"][0]
+                    y = self.dinamica_sin_choques[f"particula_{i}"][f"paso_{paso}"][1]
+                    particula.set_data([x], [y])
                 return Particulas
+        
+        # CASO 2: Simulación CON colisiones entre partículas
         else:
             def animate(frame):
+                """
+                Función de actualización de animación para dinámica con choques.
+                
+                Parameters
+                ----------
+                frame : int
+                    Número de frame actual (0 a cant_frames-1)
+                """
+                # Calcular paso temporal correspondiente a este frame
                 paso = frame * distancia_frame
+                
+                # Actualizar posición de cada partícula desde el diccionario con choques
                 for i, particula in enumerate(Particulas):
-                    particula.set_data([self.dinamica_con_choques[f"particula_{i}"][f"paso_{paso}"][0]], [self.dinamica_con_choques[f"particula_{i}"][f"paso_{paso}"][1]])
+                    x = self.dinamica_choques[f"particula_{i}"][f"paso_{paso}"][0]
+                    y = self.dinamica_choques[f"particula_{i}"][f"paso_{paso}"][1]
+                    particula.set_data([x], [y])
                 return Particulas
-            
-        self.animacion = FuncAnimation(fig, animate, init_func=init, frames=cant_frames, 
-                    blit=True, interval=tiempo_frame*1000, repeat=True)
+        
+        # CREAR Y EJECUTAR LA ANIMACIÓN
+        # FuncAnimation gestiona la animación llamando a animate() repetidamente
+        self.animacion = FuncAnimation(
+            fig,                          # Figura donde se dibuja
+            animate,                      # Función que actualiza cada frame
+            init_func=init,              # Función de inicialización
+            frames=cant_frames,          # Número total de frames
+            blit=True,                   # Optimización: solo redibujar lo que cambió
+            interval=tiempo_frame*1000,  # Tiempo entre frames en milisegundos
+            repeat=True                  # Repetir animación indefinidamente
+        )
+        
+        # Mostrar la animación en una ventana emergente
         plt.show()
     
-    def histograma_energia(self,choques = 'si'):
+    def histograma_energia(self):
         """
         Genera histograma de energías cinéticas finales y verifica conservación.
         
         Calcula las energías cinéticas de todas las partículas al final de
-        la simulación, muestra su distribución y opcionalmente verifica la
-        conservación de energía total.
-        
-        Parameters
-        ----------
-        choques : str, optional
-            'si' para verificar conservación de energía total
-            'no' para solo mostrar histograma (default: 'si')
+        la simulación, muestra su distribución y verifica la conservación de
+        energía total si se simuló con colisiones.
         
         Returns
         -------
@@ -439,42 +653,86 @@ class dinamica_particulas_confinada_2D:
         -----
         - Actualiza self.E_f con las energías cinéticas finales
         - El histograma usa 25 bins en el rango [0, 1]
-        - Si choques='si', compara energía total inicial vs final
+        - Si self.tipo_dinamica es True (hubo colisiones), compara energía total inicial vs final
         - Para colisiones elásticas, la energía debería conservarse
         - Requiere haber ejecutado simular_dinamica() previamente
+        
+        Raises
+        ------
+        AttributeError
+            Si no se ha ejecutado simular_dinamica() antes (falta self.velocidades_finales)
         
         See Also
         --------
         comprobar_T : Verifica conservación de temperatura
+        simular_dinamica : Debe ejecutarse antes para generar velocidades_finales
         """
+        # CÁLCULO DE ENERGÍAS CINÉTICAS FINALES
+        # Diccionario para almacenar la energía cinética de cada partícula
         Energias = {}
+        
+        # Iterar sobre todas las partículas para calcular su energía cinética final
         for particulas in range(self.N):
+            # Obtener el vector velocidad final de la partícula
             velocidad_final = self.velocidades_finales[f"particula_{particulas}"]
+            
+            # Calcular energía cinética
             energia_cinetica = 0.5 * self.m * (np.linalg.norm(velocidad_final))**2
+            
+            # Almacenar en el diccionario
             Energias[f"particula_{particulas}"] = energia_cinetica
+        
+        # Convertir diccionario a array NumPy para facilitar operaciones y graficación
         energias_array = np.array(list(Energias.values()))
+        
+        # Guardar las energías finales como atributo de la clase
         self.E_f = Energias
+        
+        # GENERACIÓN DEL HISTOGRAMA
+        # Crear nueva figura de 8x6 pulgadas
         plt.figure(figsize=(8,6))
-        plt.hist(energias_array, bins=25, edgecolor='black',range=(0, 1))
+        
+        # Generar histograma con 25 bins en el rango [0, 1]
+        # edgecolor='black' añade bordes negros a las barras para mejor visualización
+        plt.hist(energias_array, bins=25, edgecolor='black', range=(0, 1))
+        
+        # Añadir título y etiquetas a los ejes
         plt.title('Histograma de Energías Cinéticas Finales')
         plt.xlabel('Energía Cinética')
         plt.ylabel('Número de Partículas')
+        
+        # Mostrar el gráfico
         plt.show()
-        if choques == 'si':
+        
+        # VERIFICACIÓN DE CONSERVACIÓN DE ENERGÍA
+        # Solo verificar conservación si hubo colisiones entre partículas
+        if self.tipo_dinamica == True:
+            # Calcular energía total final sumando todas las energías individuales
             Energia_total_final = np.sum(energias_array)
 
-            velocidad_inicial = np.zeros((self.N,2))
+            # Inicializar arrays para almacenar velocidades y energías iniciales
+            velocidad_inicial = np.zeros((self.N, 2))
             Energias_iniciales = np.zeros(self.N)
+            
+            # Calcular energías cinéticas iniciales para cada partícula
             for particulas in range(self.N):
+                # Obtener velocidad inicial desde las condiciones iniciales guardadas
                 velocidad_inicial[particulas] = self.situacion_inicial[f"particula_{particulas}"]['velocidad']
+                
+                # Calcular energía cinética inicial
                 Energias_iniciales[particulas] = 0.5 * self.m * (np.linalg.norm(velocidad_inicial[particulas]))**2
-            Energias_iniciales_total = np.sum(Energias_iniciales) 
+            
+            # Sumar todas las energías iniciales para obtener energía total inicial
+            Energias_iniciales_total = np.sum(Energias_iniciales)
+            
+            # Imprimir comparación de energías (deberían ser iguales en colisiones elásticas)
             print(f"Energía Cinética Total Inicial: {Energias_iniciales_total}")
             print(f"Energía Cinética Total Final: {Energia_total_final}")
+            
         return None
 
 
-    def comprobar_T(self):
+    def comprobar_T(self,Kb=0.01):
         """
         Calcula y compara las temperaturas inicial y final del sistema.
         
@@ -507,18 +765,36 @@ class dinamica_particulas_confinada_2D:
         --------
         histograma_energia : Debe ejecutarse antes para calcular E_f
         """
-        Kb = 0.01
+        
+        # CÁLCULO DE ENERGÍA TOTAL INICIAL
+        # Inicializar acumulador para la suma de energías iniciales
         Prom_energia_inicial = 0
+        
+        # Inicializar acumulador para la suma de energías finales
         Prom_energia_final = 0
+        
+        # Sumar las energías cinéticas de todas las partículas
         for rango in range(self.N):
+            # Acumular energía inicial de cada partícula
             Prom_energia_inicial += self.E_0[f"particula_{rango}"]
+            
+            # Acumular energía final de cada partícula
             Prom_energia_final += self.E_f[f"particula_{rango}"]
 
-        T_inicial = Prom_energia_inicial/(Kb*self.N)
-        T_final = Prom_energia_final/(Kb*self.N)
+        # CÁLCULO DE TEMPERATURA USANDO TEOREMA DE EQUIPARTICIÓN
+        # Temperatura inicial calculada desde energías iniciales
+        T_inicial = Prom_energia_inicial / (Kb * self.N)
+        
+        # Temperatura final calculada desde energías finales
+        T_final = Prom_energia_final / (Kb * self.N)
+        
+        # IMPRIMIR RESULTADOS
+        # Mostrar comparación de temperaturas
+        # En un sistema con colisiones elásticas, T_inicial ≈ T_final
         print("Comprobación de temperaturas inicial y final:")
         print(f"Temperatura inicial: {T_inicial}")
         print(f"Temperatura final: {T_final}")
+        
         return None
 
     def comprobar_velocidades_finales(self):
@@ -564,10 +840,9 @@ class dinamica_particulas_confinada_2D:
 
 
 Dinamica = dinamica_particulas_confinada_2D(N_particulas=100, radio_particula=0.125, l_caja=10.0, v_0=1.0)
-Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= 'si',optimized = 'no')
+Dinamica.simular_dinamica(n_pasos=2000, delta_t=0.01, choques=False,optimized =False)
 
-Dinamica.generar_animacion(10,1000,0.01,chocan = 'si')
-Dinamica.histograma_energia(choques = 'si')
+Dinamica.generar_animacion(10,1000,0.01)
+Dinamica.histograma_energia()
 
-Dinamica.comprobar_T()
 
