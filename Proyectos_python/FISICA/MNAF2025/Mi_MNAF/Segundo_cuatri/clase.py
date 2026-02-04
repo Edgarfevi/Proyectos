@@ -182,11 +182,15 @@ class dinamica_particulas_confinada_2D:
         La matriz es simétrica (distancias[i,j] = distancias[j,i])
         Solo se calculan las distancias de la mitad superior para eficiencia
         """
+        # Definimos el tamaño de la matriz que contendrá las distancias
         n_part = self.N
         distancias = np.zeros((n_part, n_part))
 
+        # Iteramos para poder calcular las distancias entre particulas
         for i in range(n_part):
             for j in range(i+1, n_part): # Solo calculamos la mitad superior
+
+                # Calculamos la norma entre la resta de posiciones
                 d = np.linalg.norm(Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] - Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"])
                 distancias[i, j] = d
                 distancias[j, i] = d # La matriz es simétrica
@@ -225,23 +229,30 @@ class dinamica_particulas_confinada_2D:
         - Actualiza self.dinamica_sin_choques o self.dinamica_con_choques
         - Actualiza self.velocidades_finales con las velocidades al final
         - Las colisiones son perfectamente elásticas
-        - El algoritmo optimizado es recomendado para N > 100
+        - Existe un algoritmo optimizado
         - Imprime tiempo de procesamiento por paso cuando choques='si'
         
         See Also
         --------
         calcular_distancias_particulas : Método auxiliar para versión no optimizada
         """
-        if choques == 'no':
+        if choques == 'no': # Caso sin choques entre particulas
+            # Diccionario para guardar todas las posiciones en todos los pasos
             Posiciones_totales = {}
+            
+            # Diccionario para guardar la velocidad en cada paso, se actualiza no las guarda todas
             velocidades = {}
+
+            # iteramos para poder actualizar la posicion de las N particulas
             for i in range(self.N):
+                
                 Posiciones_totales[f"particula_{i}"] = {}
                 velocidades[f"particula_{i}"] = self.situacion_inicial[f"particula_{i}"]['velocidad']
                 for paso in range(n_pasos):
-                    if paso == 0:
+                    if paso == 0: # Si el paso es 0 tenemos que acceder a la situación inicial
                         Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = self.situacion_inicial[f"particula_{i}"]['posicion']
                     else:
+                        
                         Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] + velocidades[f"particula_{i}"] * delta_t
                         # Verificar colisiones con paredes y ajustar velocidad
                         for dim in range(2): # 0 = x, 1 = y
