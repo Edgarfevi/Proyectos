@@ -366,9 +366,11 @@ class dinamica_particulas_confinada_2D:
         # Estructura: {'particula_i': array([vx, vy])}
         velocidades = {}
         
+        Fuerzas_totales = {}
+        Presion_total = {}
         # Bucle principal sobre todos los pasos temporales
         for paso in range(n_pasos):
-            
+            Fuerzas_totales[f"paso_{paso}"] = 0
             # Iterar sobre todas las partículas para actualizar sus posiciones
             for i in range(self.N):
                 # --- PASO 0: Inicializar con condiciones iniciales ---
@@ -396,7 +398,7 @@ class dinamica_particulas_confinada_2D:
                         if Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] <= 0 + self.r_radio or Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] >= self.l_c - self.r_radio:
                             # Invertir componente de velocidad (rebote elástico)
                             velocidades[f"particula_{i}"][dim] *= -1
-                            
+                            Fuerzas_totales[f"paso_{paso}"] += 2 * self.m *np.abs(velocidades[f"particula_{i}"][dim]) / delta_t
                             # Corregir posición para evitar que la partícula quede fuera de los límites
                             # np.clip asegura que: r_radio <= posición <= l_c - r_radio
                             Posiciones_totales[f"particula_{i}"][f"paso_{paso}"][dim] = np.clip(
@@ -482,6 +484,7 @@ class dinamica_particulas_confinada_2D:
             tend = timer()
             print(f"Tiempo para procesar colisiones de las {self.N} partículas en el paso {paso}: {tend - tstart} segundos")
 
+            Presion_total[f"paso_{paso}"] = Fuerzas_totales[f"paso_{paso}"] / (4 * self.l_c)  # Presión = Fuerza total / Área de las paredes
         # ALMACENAMIENTO DE RESULTADOS
         # Guardar el tipo de simulación realizada (con o sin colisiones)
         self.tipo_dinamica = choques
@@ -491,12 +494,14 @@ class dinamica_particulas_confinada_2D:
             # Simulación CON colisiones entre partículas
             self.dinamica_choques = Posiciones_totales
             self.velocidades_finales = velocidades
+            self.Presion_total_choques = Presion_total
             return Posiciones_totales
         
         else:
             # Simulación SIN colisiones entre partículas (solo con paredes)
             self.dinamica_sin_choques = Posiciones_totales
             self.velocidades_finales = velocidades
+            self.Presion_total_sin_choques = Presion_total
             return Posiciones_totales
 
     def generar_animacion(self, distancia_frame, cant_frames,tiempo_frame):
@@ -787,10 +792,10 @@ class dinamica_particulas_confinada_2D:
 
         # CÁLCULO DE TEMPERATURA USANDO TEOREMA DE EQUIPARTICIÓN
         # Temperatura inicial calculada desde energías iniciales
-        T_inicial = Prom_energia_inicial / (Kb * self.N)
+        T_inicial = Prom_energia_inicial /  self.N / Kb
         
         # Temperatura final calculada desde energías finales
-        T_final = Prom_energia_final / (Kb * self.N)
+        T_final = Prom_energia_final /  self.N / Kb
         
         # IMPRIMIR RESULTADOS
         # Mostrar comparación de temperaturas
@@ -802,8 +807,85 @@ class dinamica_particulas_confinada_2D:
         print(f"Temperatura inicial: {T_inicial}")
         print(f"Temperatura final: {T_final}")
         print("\n")
+        self.T_final = T_final
+        self.T_inicial = T_inicial
+
+        return None
+    
+    def comprobar_presiones(self,n_pasos,pasos_promedio=1000):
+        """
+
+        """
+        Presiones_choques_array = np.zeros(n_pasos)
+        Presiones_sin_choques_array = np.zeros(n_pasos)
+        fig = plt.figure(figsize=(8,6))
+        plt.title("Presión total del sistema a lo largo de la simulación")
+        plt.xlabel("Paso temporal")
+        plt.ylabel("Presión total")
+
+        for paso in range(n_pasos):
+
+            if self.tipo_dinamica == True:
+                Presiones_choques_array[paso] = self.Presion_total_choques[f"paso_{paso}"]
+            
+            else:
+                Presiones_sin_choques_array[paso] = self.Presion_total_sin_choques[f"paso_{paso}"]
+        
+        Presiones_choques_promediadas = 0
+        Presiones_sin_choques_promediadas = 0
+        for paso in range(0, n_pasos):
+            if self.tipo_dinamica == True:
+                Presiones_choques_promediadas += Presiones_choques_array[paso]
+            else:
+                Presiones_sin_choques_promediadas += Presiones_sin_choques_array[paso]
+                
+            if paso % pasos_promedio == pasos_promedio - 1:
+                if self.tipo_dinamica == True:
+                    Presiones_choques_promediadas /= pasos_promedio            
+                    plt.scatter(paso, Presiones_choques_promediadas, color='blue', label='Con choques')
+                    Presiones_choques_promediadas = 0
+                else:
+                    Presiones_sin_choques_promediadas /= pasos_promedio            
+                    plt.scatter(paso, Presiones_sin_choques_promediadas, color='orange', label='Sin choques')
+                    Presiones_sin_choques_promediadas = 0
+        plt.grid()
+        plt.show()
+        if self.tipo_dinamica == True:
+            self.Presiones_choques_prom = np.mean(Presiones_choques_array)
+            print("="*100)
+            print(f"Presión promedio con choques: ")
+            print("="*100)
+            print(f"resultado: {self.Presiones_choques_prom}")
+            print("\n")
+        else:
+            self.Presiones_sin_choques_prom = np.mean(Presiones_sin_choques_array)
+            print("="*100)
+            print(f"Presión promedio sin choques: ")
+            print("="*100)
+            print(f"resultado: {self.Presiones_sin_choques_prom}")
+            print("\n")
+        
         return None
 
+    def comprobar_ley_gas_ideal(self,Kb=0.01):
+        """
+
+        """
+        print("="*100)
+        print("Comprobación de la ley de gas ideal: PA/NKbT = 1")
+        print("="*100)
+        if self.tipo_dinamica == True:
+            P = self.Presiones_choques_prom
+        else:
+            P = self.Presiones_sin_choques_prom
+        A = self.l_c**2
+        N = self.N
+        T = self.T_final
+        resultado = P * A / (N * Kb * T)
+        print(f"Resultado de PA/NKbT: {resultado}")
+        print("\n")
+        return None
+        
     def comprobar_velocidades_finales(self):
         """
         Compara velocidades iniciales y finales para diagnóstico.
@@ -836,7 +918,7 @@ class dinamica_particulas_confinada_2D:
         """
         # Inicializar arreglos para almacenar velocidades finales e iniciales
         velocidad_final = np.zeros((self.N,2))
-        velocid_inicial = np.zeros((self.N,2))
+        velocidad_inicial = np.zeros((self.N,2))
         
         # Iterar sobre todas las partículas del sistema
         for particula in range(self.N):
@@ -844,11 +926,11 @@ class dinamica_particulas_confinada_2D:
             velocidad_final[particula] = self.velocidades_finales[f"particula_{particula}"]
             
             # Extraer la velocidad inicial de la partícula actual del diccionario de condiciones iniciales
-            velocid_inicial[particula] = self.situacion_inicial[f"particula_{particula}"]['velocidad']
+            velocidad_inicial[particula] = self.situacion_inicial[f"particula_{particula}"]['velocidad']
             
             # Comparar elemento a elemento las velocidades y mostrar el resultado booleano
             # True: la componente no cambió, False: la componente cambió
-            print(velocidad_final == velocid_inicial)
+            print(velocidad_final == velocidad_inicial)
             
         return None
 
@@ -860,5 +942,7 @@ Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= True,optimized =
 Dinamica.generar_animacion(10,1000,0.01)
 Dinamica.histograma_energia()
 Dinamica.comprobar_T()
+Dinamica.comprobar_presiones(10000)
+Dinamica.comprobar_ley_gas_ideal()
 
 
