@@ -726,6 +726,10 @@ class dinamica_particulas_confinada_2D:
             Energias_iniciales_total = np.sum(Energias_iniciales)
             
             # Imprimir comparación de energías (deberían ser iguales en colisiones elásticas)
+            print("\n")
+            print("="*100)
+            print("Comparación de energía cinética total inicial vs final:")
+            print("="*100)
             print(f"Energía Cinética Total Inicial: {Energias_iniciales_total}")
             print(f"Energía Cinética Total Final: {Energia_total_final}")
             
@@ -790,11 +794,14 @@ class dinamica_particulas_confinada_2D:
         
         # IMPRIMIR RESULTADOS
         # Mostrar comparación de temperaturas
-        # En un sistema con colisiones elásticas, T_inicial ≈ T_final
+        # En un sistema con colisiones elásticas, T_inicial = T_final
+        print("\n")
+        print("="*100)
         print("Comprobación de temperaturas inicial y final:")
+        print("="*100)
         print(f"Temperatura inicial: {T_inicial}")
         print(f"Temperatura final: {T_final}")
-        
+        print("\n")
         return None
 
     def comprobar_velocidades_finales(self):
@@ -802,7 +809,7 @@ class dinamica_particulas_confinada_2D:
         Compara velocidades iniciales y finales para diagnóstico.
         
         Función de utilidad para debugging que compara elemento a elemento
-        las velocidades antes y después de la simulación.
+        las velocidades antes y después de la simulación, Ha sido creada con el simple objetivo de verificar cambios.
         
         Returns
         -------
@@ -827,12 +834,20 @@ class dinamica_particulas_confinada_2D:
         - self.situacion_inicial: condiciones iniciales
         - self.velocidades_finales: velocidades al final de la simulación
         """
+        # Inicializar arreglos para almacenar velocidades finales e iniciales
         velocidad_final = np.zeros((self.N,2))
         velocid_inicial = np.zeros((self.N,2))
+        
+        # Iterar sobre todas las partículas del sistema
         for particula in range(self.N):
+            # Extraer la velocidad final de la partícula actual del diccionario de resultados
             velocidad_final[particula] = self.velocidades_finales[f"particula_{particula}"]
+            
+            # Extraer la velocidad inicial de la partícula actual del diccionario de condiciones iniciales
             velocid_inicial[particula] = self.situacion_inicial[f"particula_{particula}"]['velocidad']
             
+            # Comparar elemento a elemento las velocidades y mostrar el resultado booleano
+            # True: la componente no cambió, False: la componente cambió
             print(velocidad_final == velocid_inicial)
             
         return None
@@ -840,9 +855,10 @@ class dinamica_particulas_confinada_2D:
 
 
 Dinamica = dinamica_particulas_confinada_2D(N_particulas=100, radio_particula=0.125, l_caja=10.0, v_0=1.0)
-Dinamica.simular_dinamica(n_pasos=2000, delta_t=0.01, choques=False,optimized =False)
+Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= True,optimized = True)
 
 Dinamica.generar_animacion(10,1000,0.01)
 Dinamica.histograma_energia()
+Dinamica.comprobar_T()
 
 
