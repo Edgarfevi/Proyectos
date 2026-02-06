@@ -366,6 +366,8 @@ class dinamica_particulas_confinada_2D:
         # Estructura: {'particula_i': array([vx, vy])}
         velocidades = {}
         
+        Energias_cineticas = {}
+        
         Fuerzas_totales = {}
         Presion_total = {}
         # Bucle principal sobre todos los pasos temporales
@@ -377,18 +379,24 @@ class dinamica_particulas_confinada_2D:
                 if paso == 0:
                     # Crear diccionario para almacenar la trayectoria de esta partícula
                     Posiciones_totales[f"particula_{i}"] = {}
+
+                    Energias_cineticas[f"particula_{i}"] = {}
                     
                     # Asignar velocidad inicial desde las condiciones iniciales
                     velocidades[f"particula_{i}"] = self.situacion_inicial[f"particula_{i}"]['velocidad']
                     
                     # Asignar posición inicial
                     Posiciones_totales[f"particula_{i}"][f"paso_0"] = self.situacion_inicial[f"particula_{i}"]['posicion']
+
+                    Energias_cineticas[f"particula_{i}"][f"paso_0"] = 0.5 * self.m * np.linalg.norm(velocidades[f"particula_{i}"])**2
                     
                 # PASOS SIGUIENTES: calcular nuevas posiciones
                 else:
 
                     # Calcular nueva posición usando la velocidad actual y el paso de tiempo
                     Posiciones_totales[f"particula_{i}"][f"paso_{paso}"] = Posiciones_totales[f"particula_{i}"][f"paso_{paso-1}"] + velocidades[f"particula_{i}"] * delta_t
+
+                    Energias_cineticas[f"particula_{i}"][f"paso_{paso}"] = 0.5 * self.m * np.linalg.norm(velocidades[f"particula_{i}"])**2
                     
                     # COLISIONES CON PAREDES
                     # Verificar si la partícula choca con alguna pared de la caja
@@ -489,6 +497,7 @@ class dinamica_particulas_confinada_2D:
         # Guardar el tipo de simulación realizada (con o sin colisiones)
         self.tipo_dinamica = choques
         
+        self.Energias_cineticas = Energias_cineticas
         # Almacenar resultados en el atributo apropiado según el tipo de simulación
         if choques == True:
             # Simulación CON colisiones entre partículas
@@ -933,10 +942,38 @@ class dinamica_particulas_confinada_2D:
             print(velocidad_final == velocidad_inicial)
             
         return None
+    
+    def proceso_hacia_equilibrio(self,paso):
+        fig, ax = plt.subplots(1,2, figsize=(8,6))
+        
+        data = np.zeros(self.N)
+        def init():
+            for i in range(2):
+                ax[i].clear()
+            return ax
+        def animate(frame):
+            for i in range(2):
+                ax[i].clear()
+            for particula in range(self.N):
+                x = self.dinamica_choques[f"particula_{particula}"][f"paso_{frame*paso}"][0]
+                y = self.dinamica_choques[f"particula_{particula}"][f"paso_{frame*paso}"][1]
+                ax[0].plot(x,y)
+            for particula in range(self.N):
+                data[particula] = self.Energias_cineticas[f"particula_{particula}"][f"paso_{frame*paso}"]
+                ax[1].hist(data, bins=25, edgecolor='black', range=(0, 1))
+                ax[1].set_title('Histograma de Energías Cinéticas')
+            
+                
+            return ax
+        ani = FuncAnimation(fig, animate, init_func=init, frames=1000, interval=1000*0.01, blit=False, repeat=True)
+        plt.show()
 
+
+        return None
 
 
 Dinamica = dinamica_particulas_confinada_2D(N_particulas=100, radio_particula=0.125, l_caja=10.0, v_0=1.0)
+
 Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= True,optimized = True)
 
 Dinamica.generar_animacion(10,1000,0.01)
@@ -944,5 +981,8 @@ Dinamica.histograma_energia()
 Dinamica.comprobar_T()
 Dinamica.comprobar_presiones(10000)
 Dinamica.comprobar_ley_gas_ideal()
+
+
+
 
 
