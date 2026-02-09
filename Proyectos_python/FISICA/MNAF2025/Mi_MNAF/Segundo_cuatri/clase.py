@@ -1,3 +1,9 @@
+"""
+Esta es una clase para simular la dinámica de partículas confinadas en un espacio bidimensional. 
+Contiene todo lo necesario para generar condiciones iniciales, simular la evolución temporal con o sin colisiones entre partículas, y analizar los resultados obtenidos. 
+La clase se llama `dinamica_particulas_confinada_2D` y tiene una amplia gama de métodos para realizar diferentes tareas relacionadas con la simulación.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -34,7 +40,7 @@ class dinamica_particulas_confinada_2D:
         Diccionario con las energías cinéticas iniciales de cada partícula
     dinamica_sin_choques : dict, optional
         Trayectorias completas cuando se simula sin colisiones entre partículas
-    dinamica_con_choques : dict, optional
+    dinamica_choques : dict, optional
         Trayectorias completas cuando se simula con colisiones entre partículas
     velocidades_finales : dict
         Velocidades finales de todas las partículas después de la simulación
@@ -42,10 +48,26 @@ class dinamica_particulas_confinada_2D:
         Energías cinéticas finales de cada partícula
     animacion : FuncAnimation, optional
         Objeto de animación de matplotlib
+    tipo_dinamica : bool
+        True si la simulación incluye choques entre partículas, False en caso contrario
+    Energias_cineticas : dict
+        Diccionario con energías cinéticas de cada partícula en cada paso temporal
+    Presion_total_choques : dict, optional
+        Diccionario con presión total en cada paso para simulación con choques
+    Presion_total_sin_choques : dict, optional
+        Diccionario con presión total en cada paso para simulación sin choques
+    Presiones_choques_prom : float, optional
+        Presión promedio del sistema con choques
+    Presiones_sin_choques_prom : float, optional
+        Presión promedio del sistema sin choques
+    T_inicial : float, optional
+        Temperatura inicial del sistema
+    T_final : float, optional
+        Temperatura final del sistema después de la simulación
     
     Methods
     -------
-    inicializar_variables_necesarias(v_constante, Kb)
+    inicializar_variables_necesarias(v_constante='si', Kb=0.01)
         Genera posiciones y velocidades iniciales de las partículas
     calcular_distancias_particulas(Posiciones_totales, paso)
         Calcula la matriz de distancias entre todas las partículas
@@ -55,10 +77,16 @@ class dinamica_particulas_confinada_2D:
         Ejecuta la simulación temporal del sistema (choques y optimized son bool)
     generar_animacion(distancia_frame, cant_frames, tiempo_frame)
         Crea una animación visual del movimiento de las partículas
+    generar_animacion_con_histograma(distancia_frame, cant_frames, tiempo_frame, bins=15)
+        Crea animación con panel de choques y gráfico de barras de energía
     histograma_energia()
         Genera histograma de energías y verifica conservación
-    comprobar_T()
+    comprobar_T(Kb=0.01)
         Calcula y compara temperaturas inicial y final
+    comprobar_presiones(n_pasos, pasos_promedio=1000)
+        Calcula y grafica la presión total del sistema a lo largo del tiempo
+    comprobar_ley_gas_ideal(Kb=0.01)
+        Verifica el cumplimiento de la ley del gas ideal P·A = N·Kb·T
     comprobar_velocidades_finales()
         Compara velocidades iniciales y finales para diagnóstico
     """
@@ -823,23 +851,52 @@ class dinamica_particulas_confinada_2D:
     
     def comprobar_presiones(self,n_pasos,pasos_promedio=1000):
         """
-
+        Compara la presión total del sistema a lo largo del tiempo.
+        
+        Calcula la presión en cada paso temporal a partir de las fuerzas
+        totales en paredes y muestra un gráfico con valores promediados
+        cada cierto número de pasos. También imprime la presión media final.
+        
+        Parameters
+        ----------
+        n_pasos : int
+            Número total de pasos temporales usados en la simulación
+        pasos_promedio : int, optional
+            Ventana de promediado para visualizar la presión (default: 1000)
+        
+        Returns
+        -------
+        None
+            Muestra un gráfico y guarda la presión media como atributo
+        
+        Notes
+        -----
+        - Requiere haber ejecutado simular_dinamica() previamente
+        - Usa self.tipo_dinamica para elegir entre con o sin choques
+        - Guarda el promedio global en:
+          * self.Presiones_choques_prom o self.Presiones_sin_choques_prom
         """
+        # ARRAYS PARA ALMACENAR LA PRESIÓN EN CADA PASO
         Presiones_choques_array = np.zeros(n_pasos)
         Presiones_sin_choques_array = np.zeros(n_pasos)
+
+        # CONFIGURACIÓN DE LA FIGURA
         fig = plt.figure(figsize=(8,6))
         plt.title("Presión total del sistema a lo largo de la simulación")
         plt.xlabel("Paso temporal")
         plt.ylabel("Presión total")
+        plt.ylim(bottom=0)
 
+        # RECOLECTAR PRESIONES PASO A PASO SEGÚN EL TIPO DE DINÁMICA
+        # En cada paso temporal tomamos la presión total ya calculada en la simulación
         for paso in range(n_pasos):
-
             if self.tipo_dinamica == True:
                 Presiones_choques_array[paso] = self.Presion_total_choques[f"paso_{paso}"]
-            
             else:
                 Presiones_sin_choques_array[paso] = self.Presion_total_sin_choques[f"paso_{paso}"]
-        
+
+        # PROMEDIADO POR VENTANAS PARA VISUALIZACIÓN
+        # Se acumula paso a paso y se grafica el promedio cada 'pasos_promedio'
         Presiones_choques_promediadas = 0
         Presiones_sin_choques_promediadas = 0
         for paso in range(0, n_pasos):
@@ -847,54 +904,207 @@ class dinamica_particulas_confinada_2D:
                 Presiones_choques_promediadas += Presiones_choques_array[paso]
             else:
                 Presiones_sin_choques_promediadas += Presiones_sin_choques_array[paso]
-                
+
             if paso % pasos_promedio == pasos_promedio - 1:
                 if self.tipo_dinamica == True:
-                    Presiones_choques_promediadas /= pasos_promedio            
+                    Presiones_choques_promediadas /= pasos_promedio
                     plt.scatter(paso, Presiones_choques_promediadas, color='blue', label='Con choques')
                     Presiones_choques_promediadas = 0
                 else:
-                    Presiones_sin_choques_promediadas /= pasos_promedio            
+                    Presiones_sin_choques_promediadas /= pasos_promedio
                     plt.scatter(paso, Presiones_sin_choques_promediadas, color='orange', label='Sin choques')
                     Presiones_sin_choques_promediadas = 0
+
+        # MOSTRAR GRÁFICO
         plt.grid()
         plt.show()
+
+        # CÁLCULO E IMPRESIÓN DE LA PRESIÓN MEDIA TOTAL
+        # Promedio global sobre todos los pasos simulados
         if self.tipo_dinamica == True:
             self.Presiones_choques_prom = np.mean(Presiones_choques_array)
             print("="*100)
-            print(f"Presión promedio con choques: ")
+            print("Presión promedio con choques:")
             print("="*100)
             print(f"resultado: {self.Presiones_choques_prom}")
             print("\n")
         else:
             self.Presiones_sin_choques_prom = np.mean(Presiones_sin_choques_array)
             print("="*100)
-            print(f"Presión promedio sin choques: ")
+            print("Presión promedio sin choques:")
             print("="*100)
             print(f"resultado: {self.Presiones_sin_choques_prom}")
             print("\n")
-        
+
         return None
 
     def comprobar_ley_gas_ideal(self,Kb=0.01):
         """
-
+        Verifica el cumplimiento de la ley del gas ideal.
+        
+        Calcula el cociente P·A / (N·Kb·T) que debe ser igual a 1 para
+        un gas ideal. Utiliza la presión promedio obtenida de la simulación,
+        el área de la caja, el número de partículas y la temperatura final.
+        
+        Parameters
+        ----------
+        Kb : float, optional
+            Constante de Boltzmann en unidades del sistema (default: 0.01)
+        
+        Returns
+        -------
+        None
+            Imprime el resultado de la ecuación de estado del gas ideal
+        
+        Notes
+        -----
+        - Requiere haber ejecutado previamente:
+          * simular_dinamica() para calcular T_final
+          * comprobar_presiones() para calcular la presión promedio
+          * comprobar_T() para calcular T_final
+        - Usa self.tipo_dinamica para elegir entre presión con o sin choques
+        - La ley del gas ideal: P·V = N·Kb·T, donde V = A (volumen en 2D)
+        - El resultado debe estar cercano a 1 si el sistema se comporta como gas ideal
         """
+        # IMPRIMIR ENCABEZADO
         print("="*100)
         print("Comprobación de la ley de gas ideal: PA/NKbT = 1")
         print("="*100)
+        
+        # OBTENER LA PRESIÓN PROMEDIO SEGÚN EL TIPO DE SIMULACIÓN
         if self.tipo_dinamica == True:
             P = self.Presiones_choques_prom
         else:
             P = self.Presiones_sin_choques_prom
-        A = self.l_c**2
-        N = self.N
-        T = self.T_final
+        
+        # CALCULAR PARÁMETROS DEL SISTEMA
+        A = self.l_c**2  # Área de la caja cuadrada (volumen en 2D)
+        N = self.N       # Número de partículas
+        T = self.T_final # Temperatura final del sistema
+        
+        # CALCULAR EL COCIENTE P·A / (N·Kb·T)
+        # Para un gas ideal este resultado debería ser igual a 1
         resultado = P * A / (N * Kb * T)
+        
+        # IMPRIMIR RESULTADO
         print(f"Resultado de PA/NKbT: {resultado}")
         print("\n")
-        return None
         
+        return None
+
+    def generar_animacion_con_histograma(self, distancia_frame, cant_frames, tiempo_frame, bins=15):
+            """
+            Genera una animación compuesta: movimiento de partículas (izquierda) e 
+            histograma de energías cinéticas (derecha).
+
+            Parameters
+            ----------
+            distancia_frame : int
+                Pasos temporales entre cada frame de la animación.
+            cant_frames : int
+                Número total de frames a generar.
+            tiempo_frame : float
+                Duración de cada frame en segundos.
+            bins : int, optional
+                Número de barras para el histograma (default: 15).
+            """
+            
+            # 1. PREPARACIÓN DE DATOS
+            # Determinar qué diccionario de posiciones usar
+            if self.tipo_dinamica:
+                datos_posiciones = self.dinamica_choques
+            else:
+                datos_posiciones = self.dinamica_sin_choques
+
+            # Calcular energía máxima global para fijar el eje X del histograma
+            max_energia_global = 0
+            
+            # Muestreo rápido para encontrar un máximo razonable para el eje X
+            step_check = distancia_frame * cant_frames
+            # Valores iniciales de energía para cada partícula en el paso 0 y maximo global
+            vals_iniciales = [self.Energias_cineticas[f"particula_{i}"]["paso_0"] for i in range(self.N)]
+            max_energia_global = max(vals_iniciales) * 3.0 # Factor por si acaso para visualizar
+            
+            # Si la energía es muy baja poner un default
+            if max_energia_global == 0: max_energia_global = 1.0
+
+            # 2. CONFIGURACIÓN DE LA FIGURA
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+            
+            # --- Configuración Eje 1
+            ax1.set_xlim(0, self.l_c)
+            ax1.set_ylim(0, self.l_c)
+            ax1.set_aspect('equal')
+            ax1.set_title("Simulación de Partículas")
+            ax1.set_xlabel("Posición X")
+            ax1.set_ylabel("Posición Y")
+            
+
+            # Inicializar partículas gráficas
+            particulas_graficas = []
+            colores = plt.cm.jet(np.linspace(0, 1, self.N)) # Colores variados para estética
+            for i in range(self.N):
+                p, = ax1.plot([], [], 'o', markersize=11)
+                particulas_graficas.append(p)
+
+            
+            # FUNCIÓN DE ACTUALIZACIÓN
+            def update(frame):
+                paso = frame * distancia_frame
+                
+                # Actualizar posiciones
+                for i, particula in enumerate(particulas_graficas):
+                    try:
+                        x = datos_posiciones[f"particula_{i}"][f"paso_{paso}"][0]
+                        y = datos_posiciones[f"particula_{i}"][f"paso_{paso}"][1]
+                        particula.set_data([x], [y])
+                    except KeyError:
+                        pass 
+                
+                # Actualizar Histograma
+                ax2.cla() # Limpiar el eje del histograma para redibujarlo
+                
+                # Recopilar energías del paso actual
+                energias_paso = []
+                for i in range(self.N):
+                    try:
+                        e = self.Energias_cineticas[f"particula_{i}"][f"paso_{paso}"]
+                        energias_paso.append(e)
+                    except KeyError:
+                        pass
+                
+                # Redibujar histograma
+                if energias_paso:
+                    ax2.hist(energias_paso, bins=bins, range=(0, max_energia_global), 
+                            color='skyblue', edgecolor='black')
+                    
+                    # Añadir línea de promedio
+                    e_prom = np.mean(energias_paso)
+                    ax2.axvline(e_prom, color='red', linestyle='dashed', linewidth=2, label=f'Promedio: {e_prom:.2f}')
+                    ax2.legend()
+
+                
+                ax2.set_xlim(0, max_energia_global)
+                ax2.set_ylim(0, self.N)
+                ax2.set_title(f"Distribución de Energía (Paso {paso})")
+                ax2.set_xlabel("Energía Cinética")
+                ax2.set_ylabel("Frecuencia")
+                
+                return particulas_graficas + [ax2]
+
+            # 4. CREAR ANIMACIÓN
+            animacion = FuncAnimation(
+                fig, 
+                update, 
+                frames=cant_frames, 
+                interval=tiempo_frame * 1000, 
+                blit=False, # blit=False es más estable cuando se usa ax.cla()
+                repeat=True
+            )
+            
+            plt.tight_layout()
+            plt.show()
+
     def comprobar_velocidades_finales(self):
         """
         Compara velocidades iniciales y finales para diagnóstico.
@@ -940,49 +1150,3 @@ class dinamica_particulas_confinada_2D:
             # Comparar elemento a elemento las velocidades y mostrar el resultado booleano
             # True: la componente no cambió, False: la componente cambió
             print(velocidad_final == velocidad_inicial)
-            
-        return None
-    
-    def proceso_hacia_equilibrio(self,paso):
-        fig, ax = plt.subplots(1,2, figsize=(8,6))
-        
-        data = np.zeros(self.N)
-        def init():
-            for i in range(2):
-                ax[i].clear()
-            return ax
-        def animate(frame):
-            for i in range(2):
-                ax[i].clear()
-            for particula in range(self.N):
-                x = self.dinamica_choques[f"particula_{particula}"][f"paso_{frame*paso}"][0]
-                y = self.dinamica_choques[f"particula_{particula}"][f"paso_{frame*paso}"][1]
-                ax[0].plot(x,y)
-            for particula in range(self.N):
-                data[particula] = self.Energias_cineticas[f"particula_{particula}"][f"paso_{frame*paso}"]
-                ax[1].hist(data, bins=25, edgecolor='black', range=(0, 1))
-                ax[1].set_title('Histograma de Energías Cinéticas')
-            
-                
-            return ax
-        ani = FuncAnimation(fig, animate, init_func=init, frames=1000, interval=1000*0.01, blit=False, repeat=True)
-        plt.show()
-
-
-        return None
-
-
-Dinamica = dinamica_particulas_confinada_2D(N_particulas=100, radio_particula=0.125, l_caja=10.0, v_0=1.0)
-
-Dinamica.simular_dinamica(n_pasos=10000, delta_t=0.01, choques= True,optimized = True)
-
-Dinamica.generar_animacion(10,1000,0.01)
-Dinamica.histograma_energia()
-Dinamica.comprobar_T()
-Dinamica.comprobar_presiones(10000)
-Dinamica.comprobar_ley_gas_ideal()
-
-
-
-
-
