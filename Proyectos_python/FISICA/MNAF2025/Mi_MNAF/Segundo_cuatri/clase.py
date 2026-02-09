@@ -665,7 +665,7 @@ class dinamica_particulas_confinada_2D:
         
         # CREAR Y EJECUTAR LA ANIMACIÓN
         # FuncAnimation gestiona la animación llamando a animate() repetidamente
-        self.animacion = FuncAnimation(
+        self.animacion_simple = FuncAnimation(
             fig,                          # Figura donde se dibuja
             animate,                      # Función que actualiza cada frame
             init_func=init,              # Función de inicialización
@@ -996,17 +996,41 @@ class dinamica_particulas_confinada_2D:
             """
             Genera una animación compuesta: movimiento de partículas (izquierda) e 
             histograma de energías cinéticas (derecha).
+            
+            Crea una animación con dos paneles simultáneos que muestran la evolución
+            temporal del sistema: el panel izquierdo muestra el movimiento de las
+            partículas con colisiones, mientras que el panel derecho presenta un
+            histograma dinámico de la distribución de energías cinéticas.
 
             Parameters
             ----------
             distancia_frame : int
-                Pasos temporales entre cada frame de la animación.
+                Pasos temporales entre cada frame de la animación
             cant_frames : int
-                Número total de frames a generar.
+                Número total de frames a generar
             tiempo_frame : float
-                Duración de cada frame en segundos.
+                Duración de cada frame en segundos
             bins : int, optional
-                Número de barras para el histograma (default: 15).
+                Número de barras para el histograma (default: 15)
+            
+            Returns
+            -------
+            None
+                Muestra la animación en pantalla
+            
+            Notes
+            -----
+            - Requiere haber ejecutado simular_dinamica() previamente
+            - Usa self.tipo_dinamica para seleccionar datos con o sin choques
+            - El histograma muestra la energía promedio con una línea roja punteada
+            - El rango del histograma se fija automáticamente basándose en la energía máxima
+            - Actualiza self.animacion_con_histograma con el objeto FuncAnimation
+            - Las partículas se muestran con colores variados para mejor visualización
+            
+            See Also
+            --------
+            generar_animacion : Versión simple sin histograma
+            simular_dinamica : Debe ejecutarse antes para generar los datos
             """
             
             # 1. PREPARACIÓN DE DATOS
@@ -1093,12 +1117,12 @@ class dinamica_particulas_confinada_2D:
                 return particulas_graficas + [ax2]
 
             # 4. CREAR ANIMACIÓN
-            animacion = FuncAnimation(
+            self.animacion_con_histograma = FuncAnimation(
                 fig, 
                 update, 
                 frames=cant_frames, 
                 interval=tiempo_frame * 1000, 
-                blit=False, # blit=False es más estable cuando se usa ax.cla()
+                blit=False,
                 repeat=True
             )
             
