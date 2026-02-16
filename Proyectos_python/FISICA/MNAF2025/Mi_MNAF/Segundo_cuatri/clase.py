@@ -460,11 +460,11 @@ class dinamica_particulas_confinada_2D:
                         puntos[j, 1] = Posiciones_totales[f"particula_{j}"][f"paso_{paso-1}"][1]  # Coordenada y
                     
                     # Construir árbol KDTree para búsqueda espacial eficiente
-                    árbol = spatial.KDTree(puntos)
+                    arbol = spatial.KDTree(puntos)
                     
                     # Buscar todos los pares de partículas a distancia <= 2*r_radio (posible colisión)
                     # query_pairs solo retorna pares únicos (j < k), evitando duplicados
-                    pares_cercanos = árbol.query_pairs(r=2*self.r_radio)
+                    pares_cercanos = arbol.query_pairs(r=2*self.r_radio)
 
                     # Procesar cada par de partículas que están suficientemente cerca
                     for (j, k) in pares_cercanos:
@@ -1174,3 +1174,4 @@ class dinamica_particulas_confinada_2D:
             # Comparar elemento a elemento las velocidades y mostrar el resultado booleano
             # True: la componente no cambió, False: la componente cambió
             print(velocidad_final == velocidad_inicial)
+
