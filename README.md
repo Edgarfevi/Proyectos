@@ -46,6 +46,7 @@ Proyectos de competiciones de ciencia de datos:
 - Modelos de predicción
 - Análisis de datasets
 - Scripts de procesamiento de datos (IBI)
+- 2 aplicaciones web completas
 
 ### 🏆 **Hackathon_agenteia/**
 Proyectos de hackathon enfocados en agentes de IA:
@@ -75,12 +76,12 @@ Colección organizada de proyectos Python:
 
 #### **FISICA/**
 - **Electrónica**: Gráficas de prácticas de laboratorio
-- **FAEA**: Física Aplicada y Experimental Avanzada
-- **MNAF2025**: Métodos Numéricos y Análisis Funcional
+- **FAEA**: Física Acelerodes y altas energías
+- **MNAF2025**: Métodos Numéricos aplicados a la físcia 
   - Entorno virtual completo
   - Proyectos de montaña rusa
 - **Óptica**: Proyectos de laboratorio de óptica
-- **TEIII**: Termodinámica Estadística
+- **TEIII**: Tecnicas experimantes, codigos de uso en la asignatrua
 
 #### **Mis_cosas/**
 - Aplicaciones personales
@@ -93,9 +94,10 @@ Colección organizada de proyectos Python:
 - Media y archivos de presentaciones
 
 ### 🌌 **spaceapp/**
-Aplicación relacionada con el espacio:
+Trabajo relacionado con el hackathon spaceapp de la Nasa:
 - API para órbitas
 - Cálculos astronómicos
+- Juego completo realizado para el hackathon
 
 ### 🌐 **web_asturismo/**
 Aplicación web completa:
