@@ -208,7 +208,7 @@ Este es un repositorio personal de aprendizaje, pero las sugerencias y comentari
 
 ## 📧 Contacto
 
-**Edgar** - [@Edgarfevi](https://github.com/Edgarfevi)
+**Edgar** - [Edgarfevi@outlook.es](https://github.com/Edgarfevi)
 
 ---
 
