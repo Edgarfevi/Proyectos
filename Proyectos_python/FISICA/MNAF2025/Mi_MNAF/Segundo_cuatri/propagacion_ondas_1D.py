@@ -5,7 +5,10 @@ from matplotlib.animation import FuncAnimation
 
 class Propagacion_ondas_1D:
     """
-    Docstring for Propagacion_ondas_1D class.
+    Clase para simular la propagación de ondas electromagnéticas en 1D usando el método FDTD (Finite-Difference Time-Domain).
+    
+    Permite calcular y visualizar la evolución temporal y espacial de los campos eléctrico (Ey) y magnético (Hz)
+    en un dominio 1D, con opciones de incluir condiciones de contorno absorbentes y medios con conductividad.
     """
 
     def __init__(
@@ -19,127 +22,365 @@ class Propagacion_ondas_1D:
         kp=250,
         distancia_simulacion=10,
         er1=16,
-        er2=49
+        er2=49,
+        tipo = 'a'
     ):
-        self.velocidad_prop = c
-        self.espaciado_mallado = espaciado_mallado
-        self.paso_temporal = self.espaciado_mallado / (2 * self.velocidad_prop)
-        self.num_puntos = puntos_mallado
-        self.simulacion_pasos = simulacion_pasos
+        """
+        Inicializa los parámetros de la simulación de propagación de ondas electromagnéticas en 1D.
+        
+        Parameters:
+            c (float): Velocidad de propagación de la onda (velocidad de la luz), default 3e8 m/s
+            espaciado_mallado (float): Resolución espacial del mallado (dx), default 10e-9 m
+            puntos_mallado (int): Número de puntos en el mallado espacial, default 1001
+            simulacion_pasos (int): Número de pasos temporales a simular, default 10000
+            delta_xp (float): Ancho espacial del pulso, default 400e-9 m
+            E0 (float): Amplitud inicial del campo eléctrico, default 1
+            kp (int): Índice espacial donde se inyecta el pulso, default 250
+            distancia_simulacion (int): Número de pasos para graficar en cada frame, default 10
+            er1 (float): Permitividad relativa para la PML en la primera frontera, default 16
+            er2 (float): Permitividad relativa para la PML en la segunda frontera, default 49
+        """
+        # Parámetros de propagación
+        self.velocidad_prop = c  # Velocidad de propagación de la onda
+        self.espaciado_mallado = espaciado_mallado  # Resolución espacial (dx)
+        self.paso_temporal = self.espaciado_mallado / (2 * self.velocidad_prop)  # Paso de tiempo (dt) según criterio de estabilidad FDTD
+        self.num_puntos = puntos_mallado  # Número de nodos en la malla espacial
+        self.simulacion_pasos = simulacion_pasos  # Número total de pasos temporales
 
-        self.delta_xp = delta_xp
-        self.E0 = E0
-        self.kp = kp
-        self.delta_tp = self.delta_xp / self.velocidad_prop
-        self.top = 5 * self.delta_tp
-        self.distancia_simulacion = distancia_simulacion
-        self.er1 = er1
-        self.er2 = er2
+        # Parámetros del pulso gaussiano
+        self.delta_xp = delta_xp  # Ancho espacial del pulso
+        self.E0 = E0  # Amplitud del campo eléctrico
+        self.kp = kp  # Posición donde se inyecta el pulso
+        self.delta_tp = self.delta_xp / self.velocidad_prop  # Ancho temporal del pulso
+        self.top = 5 * self.delta_tp  # Instante de tiempo cuando alcanza el máximo el pulso
+        
+        # Parámetros de visualización y simulación
+        self.distancia_simulacion = distancia_simulacion  # Pasos temporales por frame de animación
+        self.er1 = er1  # Permitividad relativa para PML frontera 1
+        self.er2 = er2  # Permitividad relativa para PML frontera 2
 
-        self.malla_x = None
-        self.malla_t = None
-        self.Ey = None
-        self.Hz = None
+        # Mallados espacial y temporal
+        self.malla_x = None  # Coordenadas espaciales
+        self.malla_t = None  # Coordenadas temporales
+        
+        # Campos electromagnéticos
+        self.Ey = None  # Campo eléctrico en dirección y
+        self.Hz = None  # Campo magnético en dirección z
+        
+        # Variables auxiliares para condiciones de contorno absorbentes (ABC)
+        self.variable_apoyo1 = 0  # Histórico frontera izquierda campo Ey (paso anterior)
+        self.variable_apoyo2 = 0  # Histórico frontera izquierda campo Ey (paso anterior-anterior)
+        self.variable_apoyo3 = 0  # Histórico frontera derecha campo Ey (paso anterior)
+        self.variable_apoyo4 = 0  # Histórico frontera derecha campo Ey (paso anterior-anterior)
 
-        self.variable_apoyo1 = np.zeros(np.round(2*np.sqrt(self.er1)).astype(int))
-        self.variable_apoyo2 = np.zeros(np.round(2*np.sqrt(self.er1)).astype(int))
-        self.variable_apoyo3 = np.zeros(np.round(2*np.sqrt(self.er2)).astype(int))
-        self.variable_apoyo4 = np.zeros(np.round(2*np.sqrt(self.er2)).astype(int))
+        # Buffers para capas PML (Perfectly Matched Layer)
+        self.variable_apoyo_er1 = np.zeros(np.round(2*np.sqrt(self.er1)).astype(int))  # Búfer PML frontera izquierda
+        self.variable_apoyo2_er2 = np.zeros(np.round(2*np.sqrt(self.er2)).astype(int))  # Búfer PML frontera derecha
+
+        if tipo == 'a':
+            self.tipo = 'absorbente_relativo'  # Usar capas PML para condiciones absorbentes
+        elif tipo == 'b':
+            self.tipo = 'absorbente_cte'  # Usar ABC simple para condiciones absorbentes
+        elif tipo == 'c':
+            self.tipo = 'conductor'  # Simular medio conductor (E=0 en región conductora)
+        else:
+            raise ValueError(f"Tipo de medio no reconocido: {tipo} (usar 'a' para PML, 'b' para ABC, 'c' para conductor)")
         
 
-    def generar_mallado(self):
+    def generar_mallado_1D(self):
+        """
+        Genera los mallados espacial y temporal para la simulación.
+        
+        Crea vectores de coordenadas (x, t) que definen los puntos donde se calculan
+        los campos electromagnéticos.
+        
+        Returns:
+            None (actualiza atributos: self.malla_x y self.malla_t)
+        """
+        # Mallado espacial: línea recta desde 0 hasta L (puntos_mallado * espaciado_mallado)
         self.malla_x = np.linspace(0, self.num_puntos * self.espaciado_mallado, self.num_puntos)
+        # Mallado temporal: desde 0 hasta T_final con paso dt
         self.malla_t = np.arange(0, self.simulacion_pasos * self.paso_temporal, self.paso_temporal)
 
+        return None
+
     def Onda_1D(self):
+        """
+        Inicializa los campos electromagnéticos a ceros.
+        
+        Crea los vectores que almacenarán los valores del campo eléctrico (Ey)
+        y del campo magnético (Hz) en todos los puntos del mallado.
+        
+        Returns:
+            None (actualiza atributos: self.Ey y self.Hz)
+        """
+        # Inicializa campo eléctrico Ey con ceros en todos los puntos
         self.Ey = np.zeros(self.num_puntos)
+        # Inicializa campo magnético Hz con ceros en todos los puntos
         self.Hz = np.zeros(self.num_puntos)
 
+        return None
+
     def Pulso(self, t):
+        """
+        Calcula la amplitud de un pulso gaussiano en tiempo t.
+        
+        Parameters:
+            t (float): Instante de tiempo actual de la simulación
+            
+        Returns:
+            float o array: Valor del pulso gaussiano centrado en self.top con amplitud E0
+        """
+        # Envolvente gaussiana: E(t) = E0 * exp(-(t - t0)^2 / (2 * sigma^2))
         return self.E0 * np.exp(-((t - self.top) ** 2) / (2 * (self.delta_tp ** 2)))
     
     def E_r(self):
-        e0=np.ones(500)*(1/(2*self.er1))
-        er = np.ones(501)*(1/(2*self.er2))
+        """
+        Calcula los coeficientes de permitividad relativa inversa para capas PML.
+        
+        Genera un perfil de permitividad inversa para implementar capas absorbentes
+        perfectamente acopladas (PML) en los dos extremos del dominio.
+        
+        Returns:
+            array: Vector de coeficientes 1/(2*epsilon_r) concatenados para ambas regiones
+        """
+        # Primera región: mitad de los puntos con permitividad inversa basada en er1
+        e0 = np.ones(self.num_puntos // 2) * (1 / (2 * self.er1))
+        # Segunda región: mitad restante de los puntos con permitividad inversa basada en er2
+        er = np.ones((self.num_puntos +1)//2) * (1 / (2 * self.er2))
 
-        return np.concatenate((e0,er),axis = None)
+        # Concatena ambas regiones - total debe ser exactamente self.num_puntos
+        return np.concatenate((e0, er), axis=None)
 
 
 
     def Propagacion_campos(self, t):
+        """
+        Actualiza los campos electromagnéticos usando el método FDTD sin condiciones absorbentes.
+        
+        Implementa las ecuaciones de Maxwell en diferencias finitas para un paso de tiempo,
+        sin incluir condiciones de contorno especiales (las ondas se reflejarán en los bordes).
+        
+        Parameters:
+            t (float): Instante de tiempo actual de la simulación
+            
+        Returns:
+            None (actualiza in-place los atributos self.Ey y self.Hz)
+        """
+        # Actualiza campo eléctrico Ey: 
+        # Ey = Ey - 0.5 * (Hz[i+1] - Hz[i]) / dx
         self.Ey[1:] = self.Ey[1:] - 0.5 * (self.Hz[1:] - self.Hz[:-1])
+        # Inyecta el pulso de fuente en la posición kp
         self.Ey[self.kp] = self.Ey[self.kp] + self.Pulso(t)
+        # Actualiza campo magnético Hz:
+        # Hz = Hz - 0.5 * (Ey[i] - Ey[i-1]) / dx
         self.Hz[:-1] = self.Hz[:-1] - 0.5 * (self.Ey[1:] - self.Ey[:-1])
 
-    def Absorbente(self,t):
+        return None
+
+    def Absorbente(self, t):
+        """
+        Actualiza los campos electromagnéticos con condiciones de contorno absorbentes (ABC).
+        
+        Implementa el método FDTD con condiciones de contorno absorbentes de primer orden
+        para minimizar las reflexiones en los bordes del dominio.
+        
+        Parameters:
+            t (float): Instante de tiempo actual de la simulación
+            
+        Returns:
+            None (actualiza in-place los atributos self.Ey y self.Hz)
+        """
+        # Actualiza campo eléctrico Ey (ecuación de Maxwell estándar)
         self.Ey[1:] = self.Ey[1:] - 0.5 * (self.Hz[1:] - self.Hz[:-1])
+        # Inyecta el pulso de fuente
         self.Ey[self.kp] = self.Ey[self.kp] + self.Pulso(t)
+        
+        # Condición absorbente en frontera izquierda (x=0):
+        # Usa valores históricos para absorber ondas que salen
         self.Ey[0] = self.variable_apoyo1
         self.variable_apoyo1 = self.variable_apoyo2
         self.variable_apoyo2 = self.Ey[1]
+        
+        # Condición absorbente en frontera derecha (x=L):
         self.Ey[-1] = self.variable_apoyo3
         self.variable_apoyo3 = self.variable_apoyo4
         self.variable_apoyo4 = self.Ey[-2]
+        
+        # Actualiza campo magnético Hz (ecuación de Maxwell estándar)
         self.Hz[:-1] = self.Hz[:-1] - 0.5 * (self.Ey[1:] - self.Ey[:-1])
 
+
+        return None
+
     def Absorbente_relativo(self, t):
-        self.Ey[1:] = self.Ey[1:] - self.E_r()[1:]*(self.Hz[1:] - self.Hz[:-1])
+        """
+        Actualiza los campos electromagnéticos con condiciones PML (capas absorbentes perfectas).
+        
+        Implementa el método FDTD con capas absorbentes perfectamente acopladas (PML)
+        usando coeficientes de permitividad relativa para mejorar la absorción de ondas
+        en los bordes del dominio.
+        
+        Parameters:
+            t (float): Instante de tiempo actual de la simulación
+            
+        Returns:
+            None (actualiza in-place los atributos self.Ey y self.Hz)
+        """
+        # Actualiza campo eléctrico Ey con coeficientes de permitividad relativos
+        self.Ey[1:] = self.Ey[1:] - self.E_r()[1:] * (self.Hz[1:] - self.Hz[:-1])
+        # Inyecta el pulso de fuente
         self.Ey[self.kp] = self.Ey[self.kp] + self.Pulso(t)
-        self.Ey[0] = self.variable_apoyo1[0]
-        self.variable_apoyo1[:-1] = self.variable_apoyo1[1:]
-        self.variable_apoyo1[-1] = self.Ey[1]
-        self.Ey[-1] = self.variable_apoyo3[-1]
-        self.variable_apoyo3[1:] = self.variable_apoyo3[:-1]
-        self.variable_apoyo3[0] = self.Ey[-2]
-        self.Hz[:-1] = self.Hz[:-1] - 0.5 *(self.Ey[1:] - self.Ey[:-1])
+        
+        # Condición PML en frontera izquierda:
+        # Extrae el primer valor del búfer PML
+        self.Ey[0] = self.variable_apoyo_er1[0]
+        # Desplaza el búfer hacia atrás (FIFO)
+        self.variable_apoyo_er1[:-1] = self.variable_apoyo_er1[1:]
+        # Añade el nuevo valor al final del búfer
+        self.variable_apoyo_er1[-1] = self.Ey[1]
+        
+        # Condición PML en frontera derecha:
+        self.Ey[-1] = self.variable_apoyo2_er2[-1]
+        # Desplaza el búfer hacia adelante (LIFO)
+        self.variable_apoyo2_er2[1:] = self.variable_apoyo2_er2[:-1]
+        # Añade el nuevo valor al principio del búfer
+        self.variable_apoyo2_er2[0] = self.Ey[-2]
+        
+        # Actualiza campo magnético Hz
+        self.Hz[:-1] = self.Hz[:-1] - 0.5 * (self.Ey[1:] - self.Ey[:-1])
+
+
+        return None
+
+    def Medio_conductor(self, t):
+        """
+        Actualiza los campos electromagnéticos en presencia de un medio conductor.
+        
+        Implementa el método FDTD estableciendo el campo eléctrico a cero en la región
+        conductora (los campos no pueden propagarse a través de un conductor perfecto).
+        
+        Parameters:
+            t (float): Instante de tiempo actual de la simulación
+            
+        Returns:
+            None (actualiza in-place los atributos self.Ey y self.Hz)
+        """
+        # Actualiza campo eléctrico Ey
+        self.Ey[1:] = self.Ey[1:] - 0.5 * (self.Hz[1:] - self.Hz[:-1])
+        # Inyecta el pulso de fuente
+        self.Ey[self.kp] = self.Ey[self.kp] + self.Pulso(t)
+        
+        # Anula el campo eléctrico en la región conductora (índices 400:600)
+        # Un conductor perfecto hace E = 0 en su interior
+        self.Ey[400:600] = 0
+        
+        # Actualiza campo magnético Hz
+        self.Hz[:-1] = self.Hz[:-1] - 0.5 * (self.Ey[1:] - self.Ey[:-1])
+
+        return None
 
     def generar_animacion(self):
+        """
+        Genera y muestra una animación de la propagación de la onda electromagnética.
+        
+        Realiza la simulación temporal y anima el comportamiento de los campos Ey y Hz
+        mientras se propagan en el dominio 1D.
+        
+        Parameters:
+            absorbente (bool): Si True, aplica condiciones de contorno absorbentes. Default: False
+            er_relativo (bool): Si True, usa capas PML en lugar de ABC simple. Default: False
+                               Solo tiene efecto si absorbente=True
+            
+        Returns:
+            None (muestra animación en ventana matplotlib)
+        """
+        # Genera el mallado si no existe
         if self.malla_x is None or self.malla_t is None:
-            self.generar_mallado()
+            self.generar_mallado_1D()
 
+        # Valida que el índice de fuente esté dentro del rango
         if self.kp < 0 or self.kp >= self.num_puntos:
             raise ValueError(f"kp fuera de rango: {self.kp} (0..{self.num_puntos-1})")
 
+        # Inicializa los campos a cero
         self.Onda_1D()
         
         
-
+        # Configura la figura y los ejes
         fig, ax = plt.subplots()
-        Onda_Ey = ax.plot(self.malla_x*1e6, self.Ey, label='Campo Eléctrico (Ey)')[0]
-        Onda_Hz = ax.plot(self.malla_x*1e6, self.Hz, label='Campo Magnético (Hz)')[0]
+        # Línea para el campo eléctrico Ey
+        Onda_Ey = ax.plot(self.malla_x * 1e6, self.Ey, label='Campo Eléctrico (Ey)')[0]
+        # Línea para el campo magnético Hz
+        Onda_Hz = ax.plot(self.malla_x * 1e6, self.Hz, label='Campo Magnético (Hz)')[0]
+        # Etiquetas y título
         ax.set_xlabel('Posición (µm)')
         ax.set_ylabel('Amplitud')
-        Titulo = ax.set_title('Propagación de Onda Electromagnética') 
+        Titulo = ax.set_title('Propagación de Onda Electromagnética')
         ax.legend()
-        ax.set_ylim(-2 * self.E0, 2 * self.E0)
-        ax.vlines(500 * self.espaciado_mallado * 1e6, -2 * self.E0, 2 * self.E0, color='green', linestyle='--', label='Fuente')
+        # Fija los límites del eje y
+        if self.tipo == 'absorbente_relativo':
+            ax.set_ylim(-1.5 * self.er1,1.5 *self.er1)
+            ax.vlines(self.num_puntos//2 * self.espaciado_mallado * 1e6, -2 * self.er1, 2 * self.er1, color='green', linestyle='--', label='Fuente')
+        else:
+            ax.set_ylim(-2 * self.E0, 2 * self.E0)
+            ax.vlines(self.num_puntos//2 * self.espaciado_mallado * 1e6, -2 * self.E0, 2 * self.E0, color='green', linestyle='--', label='Fuente')
+        # Marca visual de la posición de la fuente
+        # Calcula el número total de frames para la animación
         total_frames = self.simulacion_pasos // self.distancia_simulacion
 
         def animacion(frame):
-
+            """
+            Función interna que ejecuta un paso de la animación.
+            
+            Parameters:
+                frame (int): Índice del frame actual
+                
+            Returns:
+                tuple: Elementos actualizados (Titulo, Onda_Ey, Onda_Hz)
+            """
+            # Rango temporal para este frame
             inicio = frame * self.distancia_simulacion
             fin = min(inicio + self.distancia_simulacion, self.simulacion_pasos)
+            
+            # Ejecuta varios pasos temporales antes de graficar
             for t in range(int(inicio), int(fin)):
                 tiempo = t * self.paso_temporal
-                
-                self.Absorbente_relativo(tiempo)
-
-
+                # Selecciona el tipo de propagación según las flags
+                if self.tipo == 'absorbente_relativo':
+                    self.Absorbente_relativo(tiempo)  # PML
+                elif self.tipo == 'absorbente_cte':
+                    self.Absorbente(tiempo)  # ABC simple
+                elif self.tipo == 'conductor':
+                    self.Medio_conductor(tiempo)  # Con conductor
+            
+            # Actualiza el título con el tiempo actual en femtosegundos
             Titulo.set_text(f'Propagación de Onda Electromagnética -- t = {(frame * self.distancia_simulacion * self.paso_temporal * 10**15):.2f} fs')
+            # Actualiza los datos de las líneas
             Onda_Ey.set_ydata(self.Ey)
             Onda_Hz.set_ydata(self.Hz)
 
-
             return Titulo, Onda_Ey, Onda_Hz
 
+        # Crea la animación
         self.anim = FuncAnimation(
-            fig, animacion, frames=total_frames, interval=10, blit=False, repeat=False
+            fig, animacion, frames=total_frames, interval=10, blit=False , repeat=False
         )
+        # Muestra la ventana con la animación
         plt.show()
+
+        return None
 
 
 
 class Propagacion_ondas_2D(Propagacion_ondas_1D):
+    """
+    Clase para simular la propagación de ondas electromagnéticas en 2D usando el método FDTD.
+    
+    Extiende la clase Propagacion_ondas_1D para simular campos electromagnéticos en un dominio
+    bidimensional (x, y). El campo eléctrico es Ez y los campos magnéticos son Hx y Hy.
+    Hereda la funcionalidad básica de inicialización y parámetros de la clase 1D.
+    """
     def __init__(
         self,
         c=3e8,
@@ -152,8 +393,27 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         distancia_simulacion=10,
         er1=1,
         er2=4,
-        lp=200
+        lp=200,
+        tipo='a'
     ):
+        """
+        Inicializa los parámetros de la simulación de propagación de ondas electromagnéticas en 2D.
+        
+        Parameters:
+            c (float): Velocidad de propagación de la onda, default 3e8 m/s
+            espaciado_mallado (float): Resolución espacial del mallado (dx=dy), default 10e-9 m
+            puntos_mallado (int): Número de puntos en cada dimensión del mallado, default 401
+            simulacion_pasos (int): Número de pasos temporales a simular, default 10000
+            delta_xp (float): Ancho espacial del pulso, default 40e-9 m
+            E0 (float): Amplitud inicial del campo eléctrico, default 1
+            kp (int): Índice x donde se inyecta el pulso, default 200
+            distancia_simulacion (int): Número de pasos para graficar en cada frame, default 10
+            er1 (float): Permitividad relativa para la PML, default 1
+            er2 (float): Permitividad relativa para la PML, default 4
+            lp (int): Índice y donde se inyecta el pulso, default 200
+            tipo (str): Tipo de condición de contorno ('a' para PML, 'b' para ABC, 'c' para conductor)
+        """
+        # Inicializa la clase padre con los parámetros básicos
         super().__init__(
             c=c,
             espaciado_mallado=espaciado_mallado,
@@ -164,81 +424,160 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
             kp=kp,
             distancia_simulacion=distancia_simulacion,
             er1=er1,
-            er2=er2
+            er2=er2,
+            tipo=tipo
         )
     
-        self.malla_y = None
-        self.Ez = None
-        self.Hx = None
-        self.Hy = None
-        self.lp = lp
+        # Mallado en la segunda dimensión (y)
+        self.malla_y = None  # Coordenadas espaciales en y
+        # Campos electromagnéticos 2D
+        self.Ez = None  # Campo eléctrico en dirección z (polarización TM)
+        self.Hx = None  # Campo magnético en dirección x
+        self.Hy = None  # Campo magnético en dirección y
+        # Posición de inyección en la dimensión y
+        self.lp = lp  # Índice y donde se introduce el pulso
 
-    def generar_mallado(self):
-        super().generar_mallado()
+    def generar_mallado_2D(self):
+        """
+        Genera los mallados espacial 2D (X, Y) a partir de los vectores 1D.
+        
+        Crea matrices de coordenadas bidimensionales (X, Y) necesarias para visualizar
+        campos en el plano x-y.
+        
+        Returns:
+            tuple: (Malla_X, Malla_Y) - matrices de coordenadas 2D generadas
+        """
+        # Genera los mallados 1D de la clase padre
+        super().generar_mallado_1D()
+        # Mallado en la dimensión y
         self.malla_y = np.linspace(0, self.num_puntos * self.espaciado_mallado, self.num_puntos)
+        # Verifica que ambas dimensiones tengan el mismo número de puntos
         print(self.malla_x.shape == self.malla_y.shape)
 
+        # Convierte los vectores 1D en matrices 2D mediante meshgrid
         Malla_Y, Malla_X = np.meshgrid(self.malla_y, self.malla_x)
+        # Actualiza los atributos con las matrices 2D
         self.malla_x = Malla_X
         self.malla_y = Malla_Y
 
         return Malla_X, Malla_Y
     
     def Onda_2D(self):
+        """
+        Inicializa los campos electromagnéticos 2D a ceros.
+        
+        Crea matrices que almacenarán los valores del campo eléctrico (Ez) y los campos
+        magnéticos (Hx, Hy) en todos los puntos del mallado bidimensional.
+        
+        Returns:
+            None (actualiza atributos: self.Ez, self.Hx y self.Hy)
+        """
+        # Inicializa campo eléctrico Ez con ceros (matriz puntos_mallado x puntos_mallado)
         self.Ez = np.zeros((self.num_puntos, self.num_puntos))
+        # Inicializa componente x del campo magnético
         self.Hx = np.zeros((self.num_puntos, self.num_puntos))
+        # Inicializa componente y del campo magnético
         self.Hy = np.zeros((self.num_puntos, self.num_puntos))
 
-    def Pulo_2D(self, t):
-        return self.E0 * np.exp(-((t - self.top) ** 2) / (2 * (self.delta_tp ** 2)))
-    
     def Propagacion_campos_2D(self, t):
-        self.Ez[1:, 1:] = self.Ez[1:, 1:] + 0.5 * (self.Hy[1:, 1:] - self.Hy[:-1, 1:]) - 0.5*(self.Hx[1:, 1:] - self.Hx[1:, :-1])
-        self.Ez[self.kp, self.lp] = self.Pulo_2D(t)
+        """
+        Actualiza los campos electromagnéticos 2D usando el método FDTD.
+        
+        Implementa las ecuaciones de Maxwell en diferencias finitas para un paso de tiempo
+        en el dominio bidimensional (polarización TM: Ez, Hx, Hy).
+        
+        Parameters:
+            t (float): Instante de tiempo actual de la simulación
+            
+        Returns:
+            None (actualiza in-place los atributos self.Ez, self.Hx y self.Hy)
+        """
+        # Actualiza campo eléctrico Ez:
+        # Ez = Ez + 0.5 * (dHy/dx - dHx/dy)
+        self.Ez[1:, 1:] = self.Ez[1:, 1:] + 0.5 * (self.Hy[1:, 1:] - self.Hy[:-1, 1:]) - 0.5 * (self.Hx[1:, 1:] - self.Hx[1:, :-1])
+        # Inyecta el pulso de fuente en la posición (kp, lp)
+        self.Ez[self.kp, self.lp] = self.Pulso(t)
+        # Actualiza componente x del campo magnético Hx:
+        # Hx = Hx - 0.5 * dEz/dy
         self.Hx[:, :-1] = self.Hx[:, :-1] - 0.5 * (self.Ez[:, 1:] - self.Ez[:, :-1])
+        # Actualiza componente y del campo magnético Hy:
+        # Hy = Hy + 0.5 * dEz/dx
         self.Hy[:-1, :] = self.Hy[:-1, :] + 0.5 * (self.Ez[1:, :] - self.Ez[:-1, :])
 
     def generar_animacion_2D(self):
+        """
+        Genera y muestra una animación de la propagación de la onda electromagnética en 2D.
+        
+        Realiza la simulación temporal y anima el comportamiento del campo Ez
+        como un campo de contornos en el dominio 2D.
+        
+        Returns:
+            None (muestra animación en ventana matplotlib)
+        """
+        # Genera el mallado 2D si no existe
         if self.malla_x is None or self.malla_y is None or self.malla_t is None:
-            self.generar_mallado()
+            self.generar_mallado_2D()
 
+        # Valida que los índices de fuente estén dentro del rango
         if self.kp < 0 or self.kp >= self.num_puntos:
             raise ValueError(f"kp fuera de rango: {self.kp} (0..{self.num_puntos-1})")
 
+        # Inicializa los campos a cero
         self.Onda_2D()
-        niveles=np.linspace(-0.1,0.1,21)
+        
+        # Define los niveles de contorno para la visualización
+        niveles = np.linspace(-0.1, 0.1, 21)
+        # Crea la figura y los ejes
         fig, ax = plt.subplots()
-        cs = ax.contourf(self.malla_x, self.malla_y, np.clip(self.Ez, -0.1, 0.1), niveles, cmap='hot')
+        # Dibuja el campo Ez inicial como mapa de contornos
+        cs = ax.contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Ez, -0.1, 0.1), niveles, cmap='hot')
+        # Añade barra de color para escala
         barracolor = plt.colorbar(cs)
 
-
+        # Calcula el número total de frames para la animación
         total_frames = self.simulacion_pasos // self.distancia_simulacion
 
         def animacion(frame):
+            """
+            Función interna que ejecuta un paso de la animación 2D.
+            
+            Parameters:
+                frame (int): Índice del frame actual
+                
+            Returns:
+                None
+            """
+            # Rango temporal para este frame
             inicio = frame * self.distancia_simulacion
             fin = min(inicio + self.distancia_simulacion, self.simulacion_pasos)
+            
+            # Ejecuta varios pasos temporales del FDTD
             for t in range(int(inicio), int(fin)):
                 tiempo = t * self.paso_temporal
                 self.Propagacion_campos_2D(tiempo)
+            
+            # Limpia los ejes y redibuja el campo
             ax.cla()
-            ax.contourf(self.malla_x, self.malla_y, np.clip(self.Ez, -0.1, 0.1), niveles, cmap='hot')
+            # Dibuja el mapa de contornos actualizado del campo Ez
+            ax.contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Ez, -0.1, 0.1), niveles, cmap='hot')
+            # Actualiza el título con el tiempo actual en femtosegundos
             ax.set_title(f'Propagación de Onda Electromagnética en 2D -- t = {(frame * self.distancia_simulacion * self.paso_temporal * 10**15):.2f} fs')
             
             return None
 
-
+        # Crea la animación
         self.anim = FuncAnimation(
             fig, animacion, frames=total_frames, interval=10, blit=False, repeat=False
         )
+        # Muestra la ventana con la animación
         plt.show()
 
-"""
-Propagacion_ondas_2D_instance = Propagacion_ondas_2D()
-print(Propagacion_ondas_2D_instance.delta_tp)
 
+
+Propagacion_ondas_2D_instance = Propagacion_ondas_2D()
 Propagacion_ondas_2D_instance.generar_animacion_2D()
 
-"""
-Propagacion_ondas_1D_instance = Propagacion_ondas_1D()
+
+Propagacion_ondas_1D_instance = Propagacion_ondas_1D(tipo = 'a')
 Propagacion_ondas_1D_instance.generar_animacion()
 
