@@ -216,7 +216,7 @@ Este es un repositorio personal de aprendizaje, pero las sugerencias y comentari
 
 ⭐ Si encuentras útil algún proyecto, considera darle una estrella ⭐
 
-**Hecho con ❤️ y mucho ☕**
+**Hecho con ❤️ y mucho esfuerzo**
 
 </div>
 
