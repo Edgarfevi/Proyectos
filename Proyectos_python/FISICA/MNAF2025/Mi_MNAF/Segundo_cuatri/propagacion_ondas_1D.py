@@ -1,4 +1,4 @@
-# ...existing code...
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -23,7 +23,10 @@ class Propagacion_ondas_1D:
         distancia_simulacion=10,
         er1=16,
         er2=49,
-        tipo = 'a'
+        tipo = 'a',
+        e0 = 8.854e-12,
+        sigma1 = 0,
+        sigma2 = 4000
     ):
         """
         Inicializa los parámetros de la simulación de propagación de ondas electromagnéticas en 1D.
@@ -39,6 +42,8 @@ class Propagacion_ondas_1D:
             distancia_simulacion (int): Número de pasos para graficar en cada frame, default 10
             er1 (float): Permitividad relativa para la PML en la primera frontera, default 16
             er2 (float): Permitividad relativa para la PML en la segunda frontera, default 49
+            sigma1 (float): Conductividad para la primera región, default 0
+            sigma2 (float): Conductividad para la segunda región, default 4000
         """
         # Parámetros de propagación
         self.velocidad_prop = c  # Velocidad de propagación de la onda
@@ -58,7 +63,11 @@ class Propagacion_ondas_1D:
         self.distancia_simulacion = distancia_simulacion  # Pasos temporales por frame de animación
         self.er1 = er1  # Permitividad relativa para PML frontera 1
         self.er2 = er2  # Permitividad relativa para PML frontera 2
-
+        self.e0 = e0  # Permitividad del vacío
+        self.sigma1 = sigma1  # Conductividad para la primera región
+        self.sigma2 = sigma2  # Conductividad para la segunda región
+        self.ctc1 = sigma1 * self.paso_temporal / (2 * self.e0 * self.er1)  # Coeficiente de conductividad para región 1 
+        self.ctc2 = sigma2 * self.paso_temporal / (2 * self.e0 * self.er2)  # Coeficiente de conductividad para región 2
         # Mallados espacial y temporal
         self.malla_x = None  # Coordenadas espaciales
         self.malla_t = None  # Coordenadas temporales
@@ -152,7 +161,39 @@ class Propagacion_ondas_1D:
         # Concatena ambas regiones - total debe ser exactamente self.num_puntos
         return np.concatenate((e0, er), axis=None)
 
-
+    def Ca(self):
+        """
+        Calcula los coeficientes de actualización para el campo eléctrico en presencia de conductividad.
+        
+        Genera un perfil de coeficientes que incluye el efecto de la conductividad en la actualización
+        del campo eléctrico, útil para simular medios con pérdidas.
+        
+        Returns:
+            array: Vector de coeficientes Ca para la actualización del campo eléctrico
+        """
+        # Primera region: mitad de los puntos con coeficiente basado en sigma1
+        ca1 = np.ones(self.num_puntos//2) * (1 - self.ctc1) / (1 + self.ctc1)
+        # Segunda region: mitad restante de los puntos con coeficiente basado en sigma2
+        ca2 = np.ones((self.num_puntos+1)//2) * (1 - self.ctc2) / (1 + self.ctc2)
+        # Concatena ambas regiones - total debe ser exactamente self.num_puntos
+        return np.concatenate((ca1, ca2), axis=None)
+    
+    def Cb(self):
+        """
+        Calcula los coeficientes de actualización para el campo eléctrico en presencia de conductividad.
+        
+        Genera un perfil de coeficientes que incluye el efecto de la conductividad en la actualización
+        del campo eléctrico, útil para simular medios con pérdidas.
+        
+        Returns:
+            array: Vector de coeficientes Cb para la actualización del campo eléctrico
+        """
+        # Primera region: mitad de los puntos con coeficiente basado en sigma1
+        cb1 = np.ones(self.num_puntos//2) * (1 / (2 * self.er1 * (1 + self.ctc1)))
+        # Segunda region: mitad restante de los puntos con coeficiente basado en sigma2
+        cb2 = np.ones((self.num_puntos+1)//2) * (1 / (2 * self.er2 * (1 + self.ctc2)))
+        # Concatena ambas regiones - total debe ser exactamente self.num_puntos
+        return np.concatenate((cb1, cb2), axis=None)
 
     def Propagacion_campos(self, t):
         """
@@ -266,17 +307,31 @@ class Propagacion_ondas_1D:
         Returns:
             None (actualiza in-place los atributos self.Ey y self.Hz)
         """
-        # Actualiza campo eléctrico Ey
-        self.Ey[1:] = self.Ey[1:] - 0.5 * (self.Hz[1:] - self.Hz[:-1])
+        # Actualiza campo eléctrico Ey con coeficientes de permitividad relativos
+        self.Ey[1:] = self.Ey[1:]*self.Ca()[1:] - self.Cb()[1:] * (self.Hz[1:] - self.Hz[:-1])
         # Inyecta el pulso de fuente
         self.Ey[self.kp] = self.Ey[self.kp] + self.Pulso(t)
         
-        # Anula el campo eléctrico en la región conductora (índices 400:600)
-        # Un conductor perfecto hace E = 0 en su interior
-        self.Ey[400:600] = 0
+        # Condición PML en frontera izquierda:
+        # Extrae el primer valor del búfer PML
+        self.Ey[0] = self.variable_apoyo_er1[0]
+        # Desplaza el búfer hacia atrás (FIFO)
+        self.variable_apoyo_er1[:-1] = self.variable_apoyo_er1[1:]
+        # Añade el nuevo valor al final del búfer
+        self.variable_apoyo_er1[-1] = self.Ey[1]
+        
+        # Condición PML en frontera derecha:
+        self.Ey[-1] = self.variable_apoyo2_er2[-1]
+        # Desplaza el búfer hacia adelante (LIFO)
+        self.variable_apoyo2_er2[1:] = self.variable_apoyo2_er2[:-1]
+        # Añade el nuevo valor al principio del búfer
+        self.variable_apoyo2_er2[0] = self.Ey[-2]
         
         # Actualiza campo magnético Hz
         self.Hz[:-1] = self.Hz[:-1] - 0.5 * (self.Ey[1:] - self.Ey[:-1])
+
+
+        return None
 
         return None
 
@@ -319,7 +374,7 @@ class Propagacion_ondas_1D:
         Titulo = ax.set_title('Propagación de Onda Electromagnética')
         ax.legend()
         # Fija los límites del eje y
-        if self.tipo == 'absorbente_relativo':
+        if self.tipo == 'absorbente_relativo' or self.tipo == 'conductor':
             ax.set_ylim(-1.5 * self.er1,1.5 *self.er1)
             ax.vlines(self.num_puntos//2 * self.espaciado_mallado * 1e6, -2 * self.er1, 2 * self.er1, color='green', linestyle='--', label='Fuente')
         else:
@@ -389,12 +444,15 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         simulacion_pasos=10000,
         delta_xp=40e-9,
         E0=1,
-        kp=200,
+        kp=100,
         distancia_simulacion=10,
         er1=1,
         er2=4,
         lp=200,
-        tipo='a'
+        tipo='a',
+        sigma1 = 0,
+        sigma2 = 4000,
+        e0 = 8.854e-12
     ):
         """
         Inicializa los parámetros de la simulación de propagación de ondas electromagnéticas en 2D.
@@ -425,7 +483,10 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
             distancia_simulacion=distancia_simulacion,
             er1=er1,
             er2=er2,
-            tipo=tipo
+            tipo=tipo,
+            sigma1=sigma1,
+            sigma2=sigma2,
+            e0=e0
         )
     
         # Mallado en la segunda dimensión (y)
@@ -436,6 +497,12 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         self.Hy = None  # Campo magnético en dirección y
         # Posición de inyección en la dimensión y
         self.lp = lp  # Índice y donde se introduce el pulso
+
+        self.variable_2D = np.zeros((4,2, self.num_puntos))  # Variable de apoyo para condiciones absorbentes en 2D
+
+
+        
+
 
     def generar_mallado_2D(self):
         """
@@ -479,6 +546,61 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         # Inicializa componente y del campo magnético
         self.Hy = np.zeros((self.num_puntos, self.num_puntos))
 
+    def Er_2D(self):
+        """
+        Calcula los coeficientes de permitividad relativa inversa para capas PML en 2D.
+        
+        Genera un perfil de permitividad inversa para implementar capas absorbentes
+        perfectamente acopladas (PML) en los bordes del dominio bidimensional.
+        
+        Returns:
+            array: Matriz 2D de coeficientes 1/(2*epsilon_r) para cada punto del dominio
+        """
+        er = np.ones((self.num_puntos,self.num_puntos))
+        # Primera region: mitad restante de los puntos con permitividad inversa basada en er1
+        er[:-self.num_puntos//2, :] = er[:-self.num_puntos//2, :] * (1 / (2 * self.er1))
+        # Segunda región: mitad de los puntos con permitividad inversa basada en er2
+        er[self.num_puntos//2:, :] = er[(self.num_puntos+1)//2:, :] * (1 / (2 * self.er2))
+
+        # Concatena ambas regiones - total debe ser exactamente self.num_puntos
+        return er
+
+    def Ca_2d(self):
+        """
+        Calcula los coeficientes de conductividad para capas PML en 2D.
+        
+        Genera un perfil de coeficientes de conductividad para implementar capas absorbentes
+        perfectamente acopladas (PML) en los bordes del dominio bidimensional, basado en sigma1 y sigma2.
+        
+        Returns:
+            array: Matriz 2D de coeficientes de conductividad para cada punto del dominio
+        """
+        ca = np.zeros((self.num_puntos,self.num_puntos))
+        # Primera region: mitad restante de los puntos con coeficiente basado en sigma1
+        ca[:-self.num_puntos//2, :] = ca[:-self.num_puntos//2, :] + (1-self.ctc1)/(1+self.ctc1)
+        # Segunda región: mitad de los puntos con coeficiente basado en sigma2
+        ca[self.num_puntos//2:, :] = ca[self.num_puntos//2:, :] + (1-self.ctc2)/(1+self.ctc2)
+
+        return ca
+    
+    def Cb_2d(self):
+        """
+        Calcula los coeficientes de actualización para campos magnéticos en capas PML en 2D.
+        
+        Genera un perfil de coeficientes de actualización para los campos magnéticos en las capas
+        absorbentes perfectamente acopladas (PML) en los bordes del dominio bidimensional, basado en sigma1 y sigma2.
+        
+        Returns:
+            array: Matriz 2D de coeficientes de actualización para campos magnéticos en cada punto del dominio
+        """
+        cb = np.zeros((self.num_puntos,self.num_puntos))
+        # Primera region: mitad restante de los puntos con coeficiente basado en sigma1
+        cb[:-self.num_puntos//2, :] = cb[:-self.num_puntos//2, :] + 1/(2*self.er1*(1+self.ctc1))
+        # Segunda región: mitad de los puntos con coeficiente basado en sigma2
+        cb[self.num_puntos//2:, :] = cb[self.num_puntos//2:, :] + 1/(2*self.er2*(1+self.ctc2))
+
+        return cb
+    
     def Propagacion_campos_2D(self, t):
         """
         Actualiza los campos electromagnéticos 2D usando el método FDTD.
@@ -503,6 +625,111 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         # Actualiza componente y del campo magnético Hy:
         # Hy = Hy + 0.5 * dEz/dx
         self.Hy[:-1, :] = self.Hy[:-1, :] + 0.5 * (self.Ez[1:, :] - self.Ez[:-1, :])
+
+    def Propagacion_campos_2D_absorbente(self, t):
+        """
+        Actualiza los campos electromagnéticos 2D con condiciones de contorno absorbentes.
+        
+        Implementa el método FDTD con condiciones de contorno absorbentes para minimizar
+        las reflexiones en los bordes del dominio en la simulación 2D.
+        
+        Parameters:
+            t (float): Instante de tiempo actual de la simulación
+        """
+        self.Ez[1:, 1:] = self.Ez[1:, 1:] + 0.5 * (self.Hy[1:, 1:] - self.Hy[:-1, 1:]) - 0.5 * (self.Hx[1:, 1:] - self.Hx[1:, :-1])
+        # Inyecta el pulso de fuente en la posición (kp, lp)
+        self.Ez[self.kp, self.lp] = self.Pulso(t)
+
+        self.Ez[0, :] = self.variable_2D[0, 0, :]
+        self.variable_2D[0, 0, :] = self.variable_2D[0, 1, :]
+        self.variable_2D[0, 1, :] = self.Ez[1, :]
+
+        self.Ez[-1, :] = self.variable_2D[1, 0, :]
+        self.variable_2D[1, 0, :] = self.variable_2D[1, 1, :]
+        self.variable_2D[1, 1, :] = self.Ez[-2, :]
+
+        self.Ez[:, 0] = self.variable_2D[2, 0, :]
+        self.variable_2D[2, 0, :] = self.variable_2D[2, 1, :]
+        self.variable_2D[2, 1, :] = self.Ez[:, 1]
+
+        self.Ez[:, -1] = self.variable_2D[3, 0, :]
+        self.variable_2D[3, 0, :] = self.variable_2D[3, 1, :]
+        self.variable_2D[3, 1, :] = self.Ez[:, -2]
+
+        # Actualiza componente x del campo magnético Hx:
+        # Hx = Hx - 0.5 * dEz/dy
+        self.Hx[:, :-1] = self.Hx[:, :-1] - 0.5 * (self.Ez[:, 1:] - self.Ez[:, :-1])
+        # Actualiza componente y del campo magnético Hy:
+        # Hy = Hy + 0.5 * dEz/dx
+        self.Hy[:-1, :] = self.Hy[:-1, :] + 0.5 * (self.Ez[1:, :] - self.Ez[:-1, :])
+
+    def Propagacion_campos_2D_er(self, t):
+        """
+        Actualiza los campos electromagnéticos 2D con condiciones de contorno absorbentes basadas en permitividad relativa.
+        
+        Implementa el método FDTD con capas absorbentes perfectamente acopladas (PML) usando coeficientes
+        de permitividad relativa para mejorar la absorción de ondas en los bordes del dominio en la simulación 2D.
+        
+        Parameters:
+            t (float): Instante de tiempo actual de la simulación
+        """
+        self.Ez[1:, 1:] = self.Ez[1:, 1:] + self.Er_2D()[1:,1:]*(self.Hy[1:, 1:] - self.Hy[:-1, 1:]) - self.Er_2D()[1:,1:] * (self.Hx[1:, 1:] - self.Hx[1:, :-1])
+        # Inyecta el pulso de fuente en la posición (kp, lp)
+        self.Ez[self.kp, self.lp] = self.Pulso(t)
+
+        self.Ez[0, :] = self.variable_2D[0, 0, :]
+        self.variable_2D[0, 0, :] = self.variable_2D[0, 1, :]
+        self.variable_2D[0, 1, :] = self.Ez[1, :]
+
+        self.Ez[-1, :] = self.variable_2D[1, 0, :]
+        self.variable_2D[1, 0, :] = self.variable_2D[1, 1, :]
+        self.variable_2D[1, 1, :] = self.Ez[-2, :]
+
+        self.Ez[:, 0] = self.variable_2D[2, 0, :]
+        self.variable_2D[2, 0, :] = self.variable_2D[2, 1, :]
+        self.variable_2D[2, 1, :] = self.Ez[:, 1]
+
+        self.Ez[:, -1] = self.variable_2D[3, 0, :]
+        self.variable_2D[3, 0, :] = self.variable_2D[3, 1, :]
+        self.variable_2D[3, 1, :] = self.Ez[:, -2]
+
+        # Actualiza componente x del campo magnético Hx:
+        # Hx = Hx - 0.5 * dEz/dy
+        self.Hx[:, :-1] = self.Hx[:, :-1] - 0.5 * (self.Ez[:, 1:] - self.Ez[:, :-1])
+        # Actualiza componente y del campo magnético Hy:
+        # Hy = Hy + 0.5 * dEz/dx
+        self.Hy[:-1, :] = self.Hy[:-1, :] + 0.5 * (self.Ez[1:, :] - self.Ez[:-1, :])
+
+    def Propagacion_campos_2D_conductor(self, t):
+
+    
+        self.Ez[1:, 1:] = self.Ez[1:, 1:]*self.Ca_2d()[1:,1:] + self.Cb_2d()[1:,1:]*(self.Hy[1:, 1:] - self.Hy[:-1, 1:]) - self.Cb_2d()[1:,1:] * (self.Hx[1:, 1:] - self.Hx[1:, :-1])
+        # Inyecta el pulso de fuente en la posición (kp, lp)
+        self.Ez[self.kp, self.lp] = self.Pulso(t)
+
+        self.Ez[0, :] = self.variable_2D[0, 0, :]
+        self.variable_2D[0, 0, :] = self.variable_2D[0, 1, :]
+        self.variable_2D[0, 1, :] = self.Ez[1, :]
+
+        self.Ez[-1, :] = self.variable_2D[1, 0, :]
+        self.variable_2D[1, 0, :] = self.variable_2D[1, 1, :]
+        self.variable_2D[1, 1, :] = self.Ez[-2, :]
+
+        self.Ez[:, 0] = self.variable_2D[2, 0, :]
+        self.variable_2D[2, 0, :] = self.variable_2D[2, 1, :]
+        self.variable_2D[2, 1, :] = self.Ez[:, 1]
+
+        self.Ez[:, -1] = self.variable_2D[3, 0, :]
+        self.variable_2D[3, 0, :] = self.variable_2D[3, 1, :]
+        self.variable_2D[3, 1, :] = self.Ez[:, -2]
+
+        # Actualiza componente x del campo magnético Hx:
+        # Hx = Hx - 0.5 * dEz/dy
+        self.Hx[:, :-1] = self.Hx[:, :-1] - 0.5 * (self.Ez[:, 1:] - self.Ez[:, :-1])
+        # Actualiza componente y del campo magnético Hy:
+        # Hy = Hy + 0.5 * dEz/dx
+        self.Hy[:-1, :] = self.Hy[:-1, :] + 0.5 * (self.Ez[1:, :] - self.Ez[:-1, :])
+
 
     def generar_animacion_2D(self):
         """
@@ -554,7 +781,7 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
             # Ejecuta varios pasos temporales del FDTD
             for t in range(int(inicio), int(fin)):
                 tiempo = t * self.paso_temporal
-                self.Propagacion_campos_2D(tiempo)
+                self.Propagacion_campos_2D_conductor(tiempo)
             
             # Limpia los ejes y redibuja el campo
             ax.cla()
@@ -572,12 +799,82 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         # Muestra la ventana con la animación
         plt.show()
 
+    def animacion_completa(self):
+
+
+        if self.malla_x is None or self.malla_y is None or self.malla_t is None:
+            self.generar_mallado_2D()
+
+        # Valida que los índices de fuente estén dentro del rango
+        if self.kp < 0 or self.kp >= self.num_puntos:
+            raise ValueError(f"kp fuera de rango: {self.kp} (0..{self.num_puntos-1})")
+
+        # Inicializa los campos a cero
+        self.Onda_2D()
+        
+        # Define los niveles de contorno para la visualización
+        niveles = np.linspace(-0.1, 0.1, 21)
+        # Crea la figura y los ejes
+        fig, ax = plt.subplots(1,3, figsize=(20,8))
+        # Dibuja el campo Ez inicial como mapa de contornos
+        cs1 = ax[0].contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Ez, -0.1, 0.1), niveles, cmap='hot')
+        cs2 = ax[1].contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Hx, -0.1, 0.1), niveles, cmap='hot')
+        cs3 = ax[2].contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Hy, -0.1, 0.1), niveles, cmap='hot')
+        # Añade barra de color para escala
+        barracolor = plt.colorbar(cs3)
+        # Añade títulos a los ejes
+        ax[0].set_title('Ez')
+        ax[1].set_title('Hx')
+        ax[2].set_title('Hy')
+
+        # Calcula el número total de frames para la animación
+        total_frames = self.simulacion_pasos // self.distancia_simulacion
+        
+        def animacion(frame):
+            """
+            Función interna que ejecuta un paso de la animación 2D para los campos Ez, Hx y Hy.
+            
+            Parameters:
+                frame (int): Índice del frame actual
+            """
+            inicio = frame * self.distancia_simulacion
+            fin = min(inicio + self.distancia_simulacion, self.simulacion_pasos)
+            
+            # Ejecuta varios pasos temporales del FDTD
+            for t in range(int(inicio), int(fin)):
+                tiempo = t * self.paso_temporal
+                self.Propagacion_campos_2D_conductor(tiempo)
+            
+            # Limpia los ejes y redibuja el campo
+            ax[0].cla()
+            ax[1].cla()
+            ax[2].cla()
+            # Dibuja el mapa de contornos actualizado del campo Ez
+            ax[0].contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Ez, -0.1, 0.1), niveles, cmap='hot')
+            ax[1].contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Hx, -0.1, 0.1), niveles, cmap='hot')
+            ax[2].contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Hy, -0.1, 0.1), niveles, cmap='hot')
+            # Actualiza el título con el tiempo actual en femtosegundos
+            fig.suptitle(f'Propagación de Onda Electromagnética en 2D -- t = {(frame * self.distancia_simulacion * self.paso_temporal * 10**15):.2f} fs')
+            ax[0].set_title('Ez')
+            ax[1].set_title('Hx')
+            ax[2].set_title('Hy')
+            return None
+        
+        # Crea la animación
+        self.anim_completa = FuncAnimation(
+            fig, animacion, frames=total_frames, interval=10, blit=False, repeat=False
+        )
+        # Muestra la ventana con la animación
+        plt.show()
+
+            
 
 
 Propagacion_ondas_2D_instance = Propagacion_ondas_2D()
-Propagacion_ondas_2D_instance.generar_animacion_2D()
+Propagacion_ondas_2D_instance.animacion_completa()
 
 
-Propagacion_ondas_1D_instance = Propagacion_ondas_1D(tipo = 'a')
+
+Propagacion_ondas_1D_instance = Propagacion_ondas_1D(tipo = 'c')
 Propagacion_ondas_1D_instance.generar_animacion()
 
