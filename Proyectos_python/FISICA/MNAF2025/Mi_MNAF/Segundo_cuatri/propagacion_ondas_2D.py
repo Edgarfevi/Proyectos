@@ -927,7 +927,3 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         # Muestra la ventana con la animación
         plt.show()
 
-
-prueba = Propagacion_ondas_2D()
-prueba.generar_animacion_2D()
-prueba.animacion_completa()  
