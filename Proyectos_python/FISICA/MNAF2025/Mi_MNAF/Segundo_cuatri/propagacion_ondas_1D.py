@@ -363,7 +363,7 @@ class Propagacion_ondas_1D:
         Onda_Hz = ax.plot(self.malla_x * 1e6, self.Hz, label='Campo Magnético (Hz)')[0]
         # Etiquetas y título
         ax.set_xlabel('Posición (µm)')
-        ax.set_ylabel('Amplitud de Campo (V/m - Ey | A/m - Hz)')
+        ax.set_ylabel('Amplitud de Campo (A/m - Ey | A/m - Hz)')
         Titulo = ax.set_title('Propagación de Onda Electromagnética en 1D')
         ax.legend()
         # Fija los límites del eje y

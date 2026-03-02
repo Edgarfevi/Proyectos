@@ -1,3 +1,8 @@
+"""
+Nota: se deben de generar independientemente las animaciones, no funcionan concatenadadas, o se ve un poco más raro.
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -765,8 +770,7 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         # Dibuja el campo Ez inicial como mapa de contornos
         cs = ax.contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Ez, -0.1, 0.1), niveles, cmap='hot')
         # Añade línea vertical en el punto de cambio de dieléctrico
-        x_dielectrico = self.num_puntos//2 * self.espaciado_mallado * 1e6
-        ax.vlines(x_dielectrico, self.malla_y[0]*1e6, self.malla_y[-1]*1e6, color='white', linewidth=2, linestyle='--', label='Interfaz dieléctrica')
+        ax.vlines(self.num_puntos//2 * self.espaciado_mallado * 1e6, 0, 4, color='white',linewidth=3, linestyle='--', label='Punto de cambio de dielectricidad/conductividad')
         # Añade barra de color para escala
         barracolor = plt.colorbar(cs)
 
@@ -802,19 +806,18 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
             # Dibuja el mapa de contornos actualizado del campo Ez
             ax.contourf(self.malla_x*1e6, self.malla_y*1e6, np.clip(self.Ez, -0.1, 0.1), niveles, cmap='hot')
             # Añade línea vertical en el punto de cambio de dieléctrico
-            x_dielectrico = self.num_puntos//2 * self.espaciado_mallado * 1e6
-            ax.vlines(x_dielectrico, self.malla_y[0]*1e6, self.malla_y[-1]*1e6, color='white', linewidth=2, linestyle='--', label='Interfaz dieléctrica')
+            ax.vlines(self.num_puntos//2 * self.espaciado_mallado * 1e6, 0, 4, color='white',linewidth=3, linestyle='--', label='Punto de cambio de dielectricidad/conductividad')
             # Actualiza el título con el tiempo actual en femtosegundos
             ax.set_title(f'Propagación de Onda Electromagnética en 2D -- t = {(frame * self.distancia_simulacion * self.paso_temporal * 10**15):.2f} fs')
             ax.set_xlabel('Posición X (µm)')
             ax.set_ylabel('Posición Y (µm)')
-            barracolor.set_label('Campo Ez (V/m)')
+            barracolor.set_label('Campo Ez (A/m)')
             
             return None
 
         # Crea la animación
         self.anim = FuncAnimation(
-            fig, animacion, frames=total_frames, interval=10, blit=False, repeat=False
+            fig, animacion, frames=total_frames, interval=1, blit=False, repeat=False
         )
         # Muestra la ventana con la animación
         plt.show()
@@ -840,7 +843,7 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
 
         # Inicializa los campos a cero
         self.Onda_2D()
-        
+
         # Define los niveles de contorno para la visualización
         niveles = np.linspace(-0.1, 0.1, 21)
         # Crea la figura y los ejes
@@ -852,7 +855,7 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         # Añade barra de color para escala
         barracolor = plt.colorbar(cs3)
         # Añade títulos y etiquetas a los ejes
-        ax[0].set_title('Campo Eléctrico Ez (V/m)')
+        ax[0].set_title('Campo Eléctrico Ez (A/m)')
         ax[0].set_xlabel('Posición X (µm)')
         ax[0].set_ylabel('Posición Y (µm)')
         ax[1].set_title('Campo Magnético Hx (A/m)')
@@ -901,7 +904,7 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
             # Actualiza el título con el tiempo actual en femtosegundos
             fig.suptitle(f'Propagación de Onda Electromagnética en 2D -- t = {(frame * self.distancia_simulacion * self.paso_temporal * 10**15):.2f} fs')
 
-            ax[0].set_title('Campo Eléctrico Ez (V/m)')
+            ax[0].set_title('Campo Eléctrico Ez (A/m)')
             ax[0].set_xlabel('Posición X (µm)')
             ax[0].set_ylabel('Posición Y (µm)')
             ax[1].set_title('Campo Magnético Hx (A/m)')
@@ -923,3 +926,8 @@ class Propagacion_ondas_2D(Propagacion_ondas_1D):
         )
         # Muestra la ventana con la animación
         plt.show()
+
+
+prueba = Propagacion_ondas_2D()
+prueba.generar_animacion_2D()
+prueba.animacion_completa()  
