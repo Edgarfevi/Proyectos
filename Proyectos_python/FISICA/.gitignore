@@ -18,6 +18,8 @@ TEIII/*
 Optica/*
 !Optica/
 !Optica/Examen_casa/
+!Optica/Poster/
+
 # Archivos de Python compilados
 *.pyc
 *.pyo
