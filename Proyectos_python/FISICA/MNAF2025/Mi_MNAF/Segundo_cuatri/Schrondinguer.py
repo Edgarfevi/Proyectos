@@ -91,7 +91,7 @@ class Schrondiguer:
             return H_n
 
 
-    def animacion(self,hermite = True):
+    def animacion(self,hermite = False):
         print("Animando...")
         fig=plt.figure(figsize=(10, 6))
         ax1 = fig.add_subplot(2,1,1)
