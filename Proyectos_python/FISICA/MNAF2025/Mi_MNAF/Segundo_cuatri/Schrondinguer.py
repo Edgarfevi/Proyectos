@@ -44,6 +44,13 @@ class Schrondiguer:
         phi2[0] = (phi[1]-2*phi[0])/self.delta_x**2
         phi2[-1] = (phi[-2]-2*phi[-1])/self.delta_x**2
         return phi2
+    
+    def condiciones_periodicas(self, phi):
+        phi2 = np.zeros_like(phi)
+        phi2[1:-1] = (phi[2:]+phi[:-2]-2*phi[1:-1])/self.delta_x**2
+        phi2[0] = (phi[1]+phi[-1]-2*phi[0])/self.delta_x**2
+        phi2[-1] = (phi[0]+phi[-2]-2*phi[-1])/self.delta_x**2
+        return phi2
 
     def comprobacion(self):
         norma = self.norma()
@@ -91,14 +98,15 @@ class Schrondiguer:
             return H_n
 
 
-    def animacion(self,hermite = False):
+    def animacion(self,hermite = False, condiciones_periodicas=False,potencial=False):
         print("Animando...")
         fig=plt.figure(figsize=(10, 6))
         ax1 = fig.add_subplot(2,1,1)
         real, = ax1.plot([], [], label='Parte Real')
         imag, = ax1.plot([], [], label='Parte Imaginaria')
         valor_abs, = ax1.plot([], [], label='Valor Absoluto', color='red')
-        potencial, = ax1.plot(self.x, self.V/np.max(self.V), label='Potencial', color='gray', linestyle='--')
+        if potencial:
+            potencial, = ax1.plot(self.x, self.V/np.max(self.V), label='Potencial', color='gray', linestyle='--')
 
         ax1.set_ylim(-1.2, 1.2)
         ax1.set_xlim(self.min, self.max)
@@ -145,10 +153,24 @@ class Schrondiguer:
 
 
         def update(frame):
-            for i in range(frame*self.pasos_repr, (frame+1)*self.pasos_repr): 
-                self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.segunda_derivada(self.phi_r) - self.delta_t/2*self.V[:]*self.phi_r[:]
-                self.phi_r[:] = self.phi_r[:] - self.delta_t/2*self.segunda_derivada(self.phi_i) + self.delta_t*self.V[:]*self.phi_i[:]
-                self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.segunda_derivada(self.phi_r) - self.delta_t/2*self.V[:]*self.phi_r[:]
+            for i in range(frame*self.pasos_repr, (frame+1)*self.pasos_repr):
+                if condiciones_periodicas and potencial:
+                    self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.condiciones_periodicas(self.phi_r) - self.delta_t/2*self.V[:]*self.phi_r[:]
+                    self.phi_r[:] = self.phi_r[:] - self.delta_t/2*self.condiciones_periodicas(self.phi_i) + self.delta_t*self.V[:]*self.phi_i[:]
+                    self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.condiciones_periodicas(self.phi_r) - self.delta_t/2*self.V[:]*self.phi_r[:]
+                elif condiciones_periodicas:
+                    self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.condiciones_periodicas(self.phi_r)
+                    self.phi_r[:] = self.phi_r[:] - self.delta_t/2*self.condiciones_periodicas(self.phi_i)
+                    self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.condiciones_periodicas(self.phi_r)
+                elif potencial:
+                    self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.segunda_derivada(self.phi_r) - self.delta_t/2*self.V[:]*self.phi_r[:]
+                    self.phi_r[:] = self.phi_r[:] - self.delta_t/2*self.segunda_derivada(self.phi_i) + self.delta_t*self.V[:]*self.phi_i[:]
+                    self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.segunda_derivada(self.phi_r) - self.delta_t/2*self.V[:]*self.phi_r[:]
+                else:
+                    self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.segunda_derivada(self.phi_r)
+                    self.phi_r[:] = self.phi_r[:] - self.delta_t/2*self.segunda_derivada(self.phi_i)
+                    self.phi_i[:] = self.phi_i[:] + self.delta_t/4*self.segunda_derivada(self.phi_r)
+                
                 tiempos.append(i * self.delta_t)
                 normas.append(self.norma())
 
@@ -197,6 +219,6 @@ class Schrondiguer:
         plt.show()
 
 
-Schrondiguer1=Schrondiguer()
-Schrondiguer1.animacion(hermite=True)
+
+
 
