@@ -161,7 +161,8 @@ class NumerovPozoSolver:
         self.alpha0 = np.pi ** 2 / self.k
         self.alpha_inicial_scan = 0.5 * self.alpha0
 
-        self.u = np.linspace(0, self.umax, self.n) / self.umax
+        # Malla completa para integrar sin imponer paridad explicita.
+        self.u = np.linspace(-self.umax, self.umax, self.n) / self.umax
         self.du = self.u[1] - self.u[0]
 
     def C(self, punto, alpha):
@@ -169,41 +170,33 @@ class NumerovPozoSolver:
             return -self.k * alpha
         return self.k * (1 - alpha)
 
-    def psi_numerov(self, alpha, paridad="par"):
+    def psi_numerov(self, alpha):
         psi = np.zeros(self.n)
         f = np.array([self.C(ui, alpha) for ui in self.u])
         h2 = self.du ** 2
 
-        if paridad == "par":
-            psi[0] = 1.0
-            dpsi0 = 0.0
-        elif paridad == "impar":
-            psi[0] = 0.0
-            dpsi0 = 1.0
-        else:
-            raise ValueError("La paridad debe ser 'par' o 'impar'.")
-
-        psi[1] = psi[0] + dpsi0 * self.du + 0.5 * f[0] * psi[0] * h2
+        psi[0] = 0.0
+        psi[1] = 1e-12
 
         for i in range(1, self.n - 1):
             a = 1 - (h2 * f[i + 1] / 12.0)
-            b = 2 * (1 + 5 * h2 * f[i] / 12.0) * psi[i]
+            b =(2 - ((2 * h2 * f[i]) / 12.0)+(h2 * f[i])) * psi[i]
             c = (1 - h2 * f[i - 1] / 12.0) * psi[i - 1]
             psi[i + 1] = (b - c) / a
 
         return psi
 
-    def _valor_borde(self, alpha, paridad):
-        return self.psi_numerov(alpha, paridad)[-1]
+    def _valor_borde(self, alpha):
+        return self.psi_numerov(alpha)[-1]
 
-    def buscar_intervalos_autovalores(self, paridad="par", paso=1e-3):
+    def buscar_intervalos_autovalores(self, paso=1e-3):
         a = max(0.0, self.alpha_inicial_scan)
         b = a + paso
-        fa = self._valor_borde(a, paridad)
+        fa = self._valor_borde(a)
         intervalos = []
 
         while b <= 1:
-            fb = self._valor_borde(b, paridad)
+            fb = self._valor_borde(b)
             if fa * fb < 0:
                 intervalos.append((a, b))
             a, fa = b, fb
@@ -211,17 +204,17 @@ class NumerovPozoSolver:
 
         return intervalos
 
-    def refinar_autovalor_biseccion(self, intervalo, paridad="par", tol=1e-10, max_iter=300):
+    def refinar_autovalor_biseccion(self, intervalo, tol=1e-10, max_iter=300):
         a, b = intervalo
-        fa = self._valor_borde(a, paridad)
-        fb = self._valor_borde(b, paridad)
+        fa = self._valor_borde(a)
+        fb = self._valor_borde(b)
 
         if fa * fb > 0:
             raise ValueError("El intervalo no encierra una raiz.")
 
         for _ in range(max_iter):
             c = 0.5 * (a + b)
-            fc = self._valor_borde(c, paridad)
+            fc = self._valor_borde(c)
             if abs(fc) < tol or abs(b - a) < tol:
                 return c
             if fa * fc < 0:
@@ -232,18 +225,12 @@ class NumerovPozoSolver:
         return 0.5 * (a + b)
 
     def resolver_estados_ligados(self, paso_scan=1e-3, tol_biseccion=1e-10):
-        estados = []
-        for paridad in ("par", "impar"):
-            intervalos = self.buscar_intervalos_autovalores(paridad=paridad, paso=paso_scan)
-            alphas = [
-                self.refinar_autovalor_biseccion(itv, paridad=paridad, tol=tol_biseccion)
-                for itv in intervalos
-            ]
-            for alpha in alphas:
-                estados.append({"paridad": paridad, "alpha": alpha, "E_eV": alpha * self.V0})
-
-        estados.sort(key=lambda x: x["alpha"])
-        return estados
+        intervalos = self.buscar_intervalos_autovalores(paso=paso_scan)
+        alphas = [
+            self.refinar_autovalor_biseccion(itv, tol=tol_biseccion)
+            for itv in intervalos
+        ]
+        return [{"alpha": alpha, "E_eV": alpha * self.V0} for alpha in alphas]
 
 
 class NumerovAtomSolver:
@@ -379,10 +366,15 @@ class NumerovAtomSolver:
 
 
 if __name__ == "__main__":
+    print("\033[?25l", end="",flush=True)  # Ocultar cursor]")
+    print("\n\033[1m" + "INICIANDO CÁLCULO DE ESTADOS LIGADOS:" + "\033[0m", end="\n\n",)
+    print("    Progreso:------------------------- 0%", end="\r",flush=True)
     solver = PozoPotencialSolver()
     estados = solver.resolver_estados_ligados(paso_scan=1e-3, tol_biseccion=1e-10)
+    print("    Progreso:\033[32m" + "█████" + "\033[0m" + "-------------------- 20%", end="\r",flush=True)
     solver_num = NumerovPozoSolver()
     estados_num = solver_num.resolver_estados_ligados(paso_scan=1e-3, tol_biseccion=1e-10)
+    print("    Progreso:\033[32m" + "██████████" + "\033[0m" + "--------------- 40%", end="\r",flush=True)
     atom_solver = NumerovAtomSolver()
     E_H = atom_solver.encontrar_estados_ligados(
         n_estados=4,
@@ -393,6 +385,7 @@ if __name__ == "__main__":
         tipo="hidrogeno",
         Z=1,
     )
+    print("    Progreso:\033[32m" + "███████████████" + "\033[0m" + "---------- 60%", end="\r",flush=True)
     E_He_plus = atom_solver.encontrar_estados_ligados(
         n_estados=4,
         E_min=-4.9,
@@ -402,6 +395,7 @@ if __name__ == "__main__":
         tipo="hidrogenoide",
         Z=2,
     )
+    print("    Progreso:\033[32m" + "█████████████████" + "\033[0m" + "----- 80%", end="\r",flush=True)
     E_Li = atom_solver.encontrar_estados_ligados(
         n_estados=3,
         E_min=-0.6,
@@ -411,6 +405,8 @@ if __name__ == "__main__":
         tipo="litio",
         Z=1,
     )
+    print("    Progreso:\033[32m" + "█████████████████████████" + "\033[0m" + " 100%", end="\n",flush=True)
+    print("\n\033[1m" + "PARÁMETROS DEL PROBLEMA:" + "\033[0m")
 
     print(f"k = {solver.k:.6f}")
     print(f"alpha0 teorico (pi^2/k): {solver.alpha0:.6f}")
@@ -425,8 +421,7 @@ if __name__ == "__main__":
     print("\nEstados ligados (Numerov, pozo):")
     for i, estado in enumerate(estados_num, start=1):
         print(
-            f"n={i:02d} | paridad={estado['paridad']:5s} | "
-            f"alpha={estado['alpha']:.10f} | E={estado['E_eV']:.6f} eV"
+            f"n={i:02d} | alpha={estado['alpha']:.10f} | E={estado['E_eV']:.6f} eV"
         )
 
     print("\nHidrogeno (Numerov radial, l=0):")
@@ -449,3 +444,12 @@ if __name__ == "__main__":
     for i, E in enumerate(E_Li, start=1):
         print(f"n={i:02d} | E_num={E:.8f} Ha ({E * atom_solver.HARTREE_TO_EV:.6f} eV)")
 
+
+print("\n\033[1m" + "RESULTADOS OBTENIDOS:" + "\033[0m")
+print(f"Estados ligados (Pozo potencial, metodo directo): {len(estados)} encontrados.")
+print(f"Estados ligados (Pozo potencial, metodo Numerov): {len(estados_num)} encontrados.")
+print(f"Estados ligados (Hidrogeno, Numerov radial): {len(E_H)} encontrados.")
+print(f"Estados ligados (Helio hidrogenoide, Numerov radial): {len(E_He_plus)} encontrados.")
+print(f"Estados ligados (Litio efectivo, Numerov radial): {len(E_Li)} encontrados.")
+
+print("\033[?25h", end="",flush=True)  # Mostrar cursor]
