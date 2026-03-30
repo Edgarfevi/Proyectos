@@ -1,0 +1,53 @@
+\documentclass[9pt,a4paper,twocolumn,twoside]{rho-class/rho}
+
+% --- 1. Idioma y parches de Babel ---
+\usepackage[spanish,es-nodecimaldot,es-noindentfirst]{babel}
+\addto\shorthandsspanish{\spanishdeactivate{~<>}}
+
+% --- 2. Parche para evitar el error "Not in outer par mode" ---
+
+
+% --- 3. Carga de Bibliografía ---
+% Asegúrate de que el archivo rho.bib existe en la carpeta
+\addbibresource{rho.bib}
+
+% --- 4. Datos del Informe ---
+
+\title{Estudio de la vida media y conversión interna del $Ba^{134} m$}
+\author{Edgar Fernández Vigil}
+\affil{Física - Facultad de Ciencias - Universidad de Oviedo}
+\dates{\today}
+
+
+\journalname{FISICA}
+\journal{Vida media y conversión interna del $Ba^{134} m$ }
+
+
+% --- 5. Resumen ---
+\begin{abstract}
+    Este es un documento de prueba para verificar que la bibliografía 
+    y el diseño de doble columna funcionan sin errores de compilación.
+\end{abstract}
+
+\keywords{Física, LaTeX, Biber, Rho-class}
+
+% ----------------------------------------------------------
+\begin{document}
+
+    \maketitle
+    \thispagestyle{firststyle}
+
+\section{Introducción}
+    \rhostart{L}a configuración ha sido exitosa. Ahora puedes citar 
+    tus libros usando el comando \cite{key} donde 'key' es la 
+    etiqueta que tengas en tu archivo \texttt{rho.bib}.
+
+\section{Resultados}
+    Aquí puedes empezar a escribir el contenido de tu práctica.
+
+% --- 6. Impresión de Bibliografía ---
+\newpage
+\section{Referencias}
+\printbibliography[heading=none]
+
+\end{document}
