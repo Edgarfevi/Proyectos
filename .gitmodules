@@ -1,0 +1,3 @@
+[submodule "Latex/Plantillas/plantilla-rho"]
+	path = Latex/Plantillas/plantilla-rho
+	url = https://github.com/edgarfevi/Rho-class.git
