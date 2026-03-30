@@ -1,4 +1,21 @@
+# Archivos de salida de LaTeX
+*.xdv
+*.synctex.gz
+*.fdb_latexmk
 
+# Archivos auxiliares y de bibliografía
+*.aux
+*.log
+*.fls
+*.toc
+*.out
+*.bcf
+*.xml
+*.bbl
+*.blg
+
+# Carpetas temporales (como las de minted)
+_minted-*/
 
 
 
