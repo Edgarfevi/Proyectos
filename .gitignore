@@ -1,26 +1,28 @@
 # Archivos de salida de LaTeX
-*.xdv
-*.synctex.gz
-*.fdb_latexmk
+**/*.xdv
+**/*.synctex.gz
+**/*.fdb_latexmk
 
 # Archivos auxiliares y de bibliografía
-*.aux
-*.log
-*.fls
-*.toc
-*.out
-*.bcf
-*.xml
-*.bbl
-*.blg
+**/*.aux
+**/*.log
+**/*.fls
+**/*.toc
+**/*.out
+**/*.bcf
+**/*.xml
+**/*.bbl
+**/*.blg
 
 # Carpetas temporales (como las de minted)
-_minted-*/
+**/_minted-*/
 
 # entornos virtuales
 **/bin/
 **/lib/
 **/lib64/
+# Puede ser un link simbólico
+**/lib64 
 **/etc/
 **/include/
 **/*.cfg
