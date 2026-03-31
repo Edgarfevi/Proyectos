@@ -17,6 +17,15 @@
 # Carpetas temporales (como las de minted)
 _minted-*/
 
+# entornos virtuales
+**/bin/
+**/lib/
+**/lib64/
+**/etc/
+**/include/
+**/*.cfg
+**/__pycache__/
+**/share/
 
 
 
