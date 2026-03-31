@@ -1,33 +1,38 @@
 \documentclass[9pt,a4paper,twocolumn,twoside]{rho-class/rho}
 
-% --- 1. Idioma y parches de Babel ---
-\usepackage[spanish,es-nodecimaldot,es-noindentfirst]{babel}
-\addto\shorthandsspanish{\spanishdeactivate{~<>}}
+% --- 1. Idioma y matemáticas básicas ---
+\usepackage[spanish,es-nodecimaldot,es-noindentfirst,es-noshorthands]{babel}
 
 
+% --- 2. EL TRUCO DE MAGIA (BIEN ESCRITO) ---
+% Borramos los comandos problemáticos usando su nombre exacto interno
+\expandafter\let\csname not=\endcsname\relax
+\expandafter\let\csname not<\endcsname\relax
+\expandafter\let\csname not>\endcsname\relax
 
-% --- 3. Carga de Bibliografía ---
-% Asegúrate de que el archivo rho.bib existe en la carpeta
+% Ahora ya podemos cargar la fuente moderna sin que explote
+\usepackage{fontspec}
+\usepackage{unicode-math}
+
+% --- 3. Bibliografía ---
 \addbibresource{rho.bib}
 
 % --- 4. Datos del Informe ---
-
-\title{Estudio de la vida media y conversión interna del $Ba^{134} m$}
+\title{Estudio de la vida media y conversión interna del Ba$^{137\text{m}}$}
 \author{Edgar Fernández Vigil}
 \affil{Física - Facultad de Ciencias - Universidad de Oviedo}
 \dates{\today}
-
-
 \journalname{TEIII - Práctica de Laboratorio}
-\journal{Vida media y conversión interna del $Ba^{134} m$ }
-
+\journal{Vida media y conversión interna del Ba$^{137\text{m}}$}
 
 % --- 5. Resumen ---
 \begin{abstract}
-    Resumen del informe
+Este informe documenta el estudio de la cinética de desintegración del isótopo metaestable $^{137\text{m}}\text{Ba}$ y la determinación de su vida media. %
+El experimento se basa en el proceso de elución del bario a partir de una muestra madre de $^{137}\text{Cs}$, aprovechando la diferencia de solubilidad entre ambos elementos. %
+Mediante el registro de la actividad radiactiva del eluido en función del tiempo con un detector de centelleo, se obtuvo la curva de decaimiento exponencial característica del proceso. %
+A partir del ajuste analítico de los datos, se calculó la constante de desintegración $\lambda$ y la vida media ($\tau$), comparando los resultados con los valores tabulados. %
+Adicionalmente, se analizó el espectro de energías para estimar la tasa de conversión interna y se realizó una datación radiométrica para determinar la antigüedad de la fuente original de cesio. %
 \end{abstract}
-
-\keywords{Física, LaTeX, Biber, Rho-class}
 
 % ----------------------------------------------------------
 \begin{document}
@@ -36,19 +41,49 @@
     \thispagestyle{firststyle}
 
 \section{Introducción}
-    \rhostart{L}a configuración ha sido exitosa. Ahora puedes citar 
-    tus libros usando el comando \cite{PFGPlots} donde 'key' es la 
-    etiqueta que tengas en tu archivo \texttt{rho.bib}.
 
-\section{Resultados y discusión}
-    Aquí puedes empezar a escribir el contenido de tu práctica.
+\rhostart{E}l decaimiento radiactivo es un proceso estocástico gobernado por la ley de desintegración exponencial, descrita matemáticamente como $N(t)=N_{0}e^{-\lambda t}$, donde $\lambda$ es la constante de desintegración. En esta práctica se analiza la cadena de desintegración del Cs$^{137}$, un isótopo radiactivo que decae predominantemente (95\% de probabilidad) mediante emisión $\beta$ al estado metaestable Ba$^{137m}$. Este proceso de la sustancia madre tiene un periodo de semidesintegración de aproximadamente 30 años.
 
-\section{Conclusiones}
-    Discute tus resultados aquí.
+Una vez en el estado metaestable, el Ba$^{137m}$ decae a su estado fundamental estable (Ba$^{137}$) liberando un exceso de energía de 661.7 keV, un proceso caracterizado por una vida media corta de 2.551 $\pm$ 0.008 minutos. Generalmente, esta desintegración ocurre a través de la emisión de un fotón $\gamma$. Sin embargo, debido a que la transición implica una diferencia en el número cuántico de espín de 4, la vida media del estado es lo suficientemente larga para que un proceso alternativo adquiera una probabilidad notable: la conversión interna.
 
-% --- 6. Impresión de Bibliografía ---
-\newpage
+En la conversión interna, el momento angular y la energía de excitación no se liberan como un fotón $\gamma$, sino que se transfieren directamente a un electrón atómico, típicamente de la capa K. La expulsión de este electrón deja al átomo ionizado; al rellenarse esta vacante con un electrón de las capas externas, se emite un rayo X característico de 32.2 keV. Aprovechando un generador de isótopos que permite eluir y aislar el Ba$^{137m}$ de su nucleido padre, la espectrometría de estas emisiones permite estudiar tanto la cinética del decaimiento como el cálculo de la fracción de conversión interna.
 
-\printbibliography
+\section{Objetivos}
+La práctica persigue los siguientes objetivos:
+
+\begin{itemize}
+    \item \textbf{Comprender la dinámica de la desintegración radiactiva:} Afianzar los conceptos de vida media ($\tau = t_{1/2}/\ln 2$) y constante de desintegración ($\lambda$), estudiando experimentalmente su carácter exponencial.
+    \item \textbf{Aislar nucleidos radiactivos:} Entender el proceso de elución y la separación química del isótopo hijo metaestable Ba$^{137m}$ a partir del isótopo padre Cs$^{137}$ en un generador isotópico, así como analizar la tasa de reposición para volver al equilibrio radiactivo.
+    \item \textbf{Determinar la vida media del estado metaestable:} Medir la actividad de la muestra eludida en función del tiempo para obtener de manera empírica la curva de desintegración y calcular la vida media del Ba$^{137m}$.
+    \item \textbf{Cuantificar el efecto de conversión interna:} Estimar la tasa o fracción de conversión interna ($F$) del Ba$^{137m}$ calculando la relación de las áreas bajo los fotopicos correspondientes a la emisión de rayos X (32.2 keV) y rayos $\gamma$ (661.7 keV).
+    \item \textbf{Aplicar técnicas de datación radiométrica:} Utilizar las medidas de actividad de la fuente madre y consideraciones de eficiencia y geometría del detector para estimar la antigüedad de la muestra original de Cs$^{137}$.
+\end{itemize}
+
+\section{Procedimiento Experimental}
+
+El desarrollo experimental se centró en la obtención de una muestra pura de corta vida media y su posterior monitorización temporal mediante espectroscopía gamma. %
+
+\subsection{Elución del isótopo metaestable}
+Para aislar el $^{137\text{m}}\text{Ba}$ de su nucleido padre $^{137}\text{Cs}$, se utilizó un generador de isótopos (isótopo-generador). %
+Se hizo pasar una solución de elución (ácido clorhídrico y cloruro sódico) a través de la columna del generador, extrayendo selectivamente el bario metaestable debido a que el cesio permanece fijado en la matriz de intercambio iónico. %
+El eluido se recogió en una probeta pequeña y se trasladó inmediatamente al sistema de detección para minimizar la pérdida de actividad debido a su corta vida media. %
+
+\subsection{Medición del decaimiento temporal}
+Una vez obtenida la muestra, se colocó frente a un detector de centelleo conectado a un analizador multicanal. %
+Se configuró el software para realizar medidas consecutivas en intervalos de tiempo fijos (típicamente 10 o 20 segundos) durante un periodo total de unos 10 a 15 minutos. %
+Este procedimiento permitió registrar la disminución de la tasa de conteo a medida que el $^{137\text{m}}\text{Ba}$ decaía hacia su estado fundamental estable, $^{137}\text{Ba}$. %
+
+\subsection{Espectroscopía y conversión interna}
+Con el fin de estudiar la conversión interna, se registró el espectro de energía de la muestra. %
+Se identificó el fotopico correspondiente a la emisión gamma de 661.7 keV y se analizaron las emisiones de rayos X de baja energía asociadas al proceso de conversión interna (vacantes en la capa K). %
+La relación entre las áreas de estos picos, tras aplicar las correcciones de eficiencia del detector, permitió estimar la probabilidad relativa de ambos procesos de desexcitación. %
+
+\subsection{Análisis de datos y datación}
+Los datos de actividad registrados se corrigieron restando la radiación de fondo ambiental medida previamente. %
+Se realizó un ajuste por mínimos cuadrados a una función exponencial de la forma $N(t) = N_0 e^{-\lambda t} + C$ para extraer la constante de desintegración. %
+Finalmente, utilizando la actividad total medida y comparándola con la actividad nominal declarada por el fabricante ($A_0$), se empleó la ley de desintegración del $^{137}\text{Cs}$ ($T_{1/2} \approx 30$ años) para estimar la antigüedad de la fuente radiactiva del laboratorio. %
+
+\section{Resultados y Discusión}
+holaaa
 
 \end{document}
