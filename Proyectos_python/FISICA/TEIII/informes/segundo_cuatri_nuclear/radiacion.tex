@@ -3,7 +3,6 @@
 % --- 1. Idioma y matemáticas básicas ---
 \usepackage[spanish,es-nodecimaldot,es-noindentfirst,es-noshorthands]{babel}
 
-
 % --- 2. EL TRUCO DE MAGIA (BIEN ESCRITO) ---
 % Borramos los comandos problemáticos usando su nombre exacto interno
 \expandafter\let\csname not=\endcsname\relax
@@ -27,11 +26,8 @@
 
 % --- 5. Resumen ---
 \begin{abstract}
-En el presente informe se detalla el estudio experimental de las propiedades de la radiación ionizante y su interacción con la materia mediante el uso de un tubo contador Geiger-Müller. %
-En primer lugar, se caracterizó la respuesta instrumental determinando empíricamente su curva \textit{plateau} para establecer el voltaje óptimo de operación. %
-Posteriormente, se analizó la naturaleza estocástica de las emisiones radiactivas, verificando que la detección de la radiación de fondo en intervalos cortos obedece a una distribución asimétrica de Poisson, mientras que las tasas de conteo elevadas procedentes de fuentes activas se ajustan a una distribución continua de Gauss. %
-Asimismo, se comprobó la atenuación geométrica de una fuente isótropa de $^{90}\text{Sr}$, confirmando su decaimiento proporcional a la inversa del cuadrado de la distancia. %
-Por último, se evaluó la atenuación material de la radiación; mediante la interposición de láminas de aluminio y plomo, se calculó el coeficiente de absorción y el rango de frenado máximo para partículas $\beta$, además de contrastar cualitativamente el poder de penetración y las necesidades de apantallamiento para emisiones $\alpha$ ($^{238}\text{Pu}$) y $\gamma$ ($^{60}\text{Co}$). %
+\noindent
+En este informe se presenta el estudio experimental de la radiación ionizante utilizando un detector Geiger-Müller. En primer lugar, se caracterizó el dispositivo mediante la obtención de la curva \textit{plateau}, fijando un voltaje de operación de 1000 V para garantizar la estabilidad de las medidas. Se analizó la naturaleza estadística de las emisiones, comprobando que el fondo ambiental sigue una distribución de Poisson, mientras que las fuentes de alta actividad se aproximan a una distribución de Gauss. Además, se estudió la atenuación de la radiación con la distancia, verificando la necesidad de correcciones por ángulo sólido, y se midió el alcance de las partículas $\beta$ en aluminio. A partir del rango de frenado ($R \approx 849 \text{ mg/cm}^2$), se estimó una energía máxima de 1.856 MeV, lo que confirma la detección de electrones procedentes del isótopo hijo $^{90}\text{Y}$. Los resultados obtenidos presentan una alta coherencia con el \textbf{valor referencial} esperado, validando las leyes de interacción radiación-materia en el laboratorio.
 \end{abstract}
 
 % ----------------------------------------------------------
@@ -40,81 +36,174 @@ Por último, se evaluó la atenuación material de la radiación; mediante la in
     \maketitle
     \thispagestyle{firststyle}
 
-\section{Introducción}
+\section{Introducción y motivación}
 
-\rhostart{E}l tubo Geiger-Müller es uno de los instrumentos fundamentales en la física experimental para la detección de radiación ionizante en entornos de baja actividad. %
-Su funcionamiento se basa en la ionización de un gas encerrado en un cilindro sometido a una alta diferencia de potencial; cuando una partícula o fotón incidente penetra en la región activa, desencadena una avalancha de electrones que se registra como un pulso eléctrico. %
-Para operar de manera fiable este dispositivo, es imperativo caracterizar su respuesta frente al voltaje aplicado, determinando su curva \textit{plateau} para establecer un voltaje óptimo de trabajo y evitar la región de descarga continua. %
+\rhostart{D}urante esta práctica trataremos de entender cómo funciona un detector Geiger-Müller para la medición de radiación ionizante en entornos de baja actividad. Para ello, analizaremos por partes cada uno de los fenómenos que afectan a la detección. 
 
-Dado que la desintegración radiactiva es un proceso fundamentalmente estocástico, la detección de eventos en intervalos de tiempo fijos obedece a leyes estadísticas precisas. %
-En regímenes de baja tasa de conteo, como ocurre al medir la radiación de fondo ambiental (compuesta, entre otros, por rayos cósmicos y muones), el proceso obedece a una distribución asimétrica de Poisson. %
-Por el contrario, cuando se expone el detector a fuentes radiactivas con tasas de emisión elevadas, el comportamiento límite permite aproximar las fluctuaciones estadísticas a una distribución continua y simétrica de Gauss. %
-
-Adicionalmente, el estudio de la radiación exige comprender su propagación espacial y su interacción con la materia. %
-Por un lado, la fluencia de partículas emitidas por una fuente puntual isótropa se atenúa geométricamente con el cuadrado de la distancia. %
-Por otro lado, la atenuación material depende drásticamente de la naturaleza de la radiación incidente: las partículas $\beta$ (electrones) sufren un frenado paulatino caracterizado por un rango máximo y un coeficiente de absorción de masa, mientras que la radiación $\alpha$ y $\gamma$ presentan mecanismos de interacción y requisitos de apantallamiento muy diferentes al atravesar materiales como el aluminio o el plomo. %
+En primer lugar, caracterizaremos el propio tubo, estudiando cómo se comporta la tasa de conteo al variar la diferencia de potencial para poder trabajar en un rango seguro y fiable. Además, estudiaremos el comportamiento estadístico de las emisiones. Como la desintegración es un proceso aleatorio, veremos en qué casos nuestras mediciones se ajustan a una distribución de Poisson (para el fondo ambiental) y en cuáles se acercan a una campana de Gauss (para fuentes muy activas). Por último, analizaremos cómo disminuye la cantidad de partículas detectadas al alejarnos de la muestra, y mediremos experimentalmente el poder de penetración de distintos tipos de radiación ($\alpha$, $\beta$ y $\gamma$) interponiendo distintos materiales absorbentes.
 
 \section{Objetivos}
 
-La finalidad general de esta práctica es familiarizarse con los métodos de medida de radiación en baja intensidad y comprender los efectos de la interacción radiación-materia. %
-De forma específica, el experimento persigue los siguientes objetivos: %
+La finalidad general de esta práctica es familiarizarnos con los métodos de medida de radiación y comprender los efectos de la interacción radiación-materia. En concreto, buscaremos:
 
 \begin{itemize}
-    \item \textbf{Caracterización del tubo Geiger-Müller:} Obtener experimentalmente la curva \textit{plateau} del detector registrando la tasa de conteo en función del voltaje aplicado, con el fin de determinar el punto de operación óptimo (en torno a 1000 V) y calcular la pendiente de dicha meseta. %
-    \item \textbf{Análisis estadístico de la emisión:} Contrastar la naturaleza estocástica de la radiactividad verificando empíricamente que la radiación de fondo obedece a una distribución de Poisson, mientras que las medidas de una muestra radiactiva activa (como el $^{90}\text{Sr}$ o $^{137}\text{Cs}$) se ajustan a una campana de Gauss. %
-    \item \textbf{Verificación de la atenuación geométrica:} Demostrar que la tasa de detección de una fuente radiactiva isótropa disminuye en proporción inversa al cuadrado de la distancia fuente-detector ($\sim 1/d^2$). %
-    \item \textbf{Estudio de la absorción de partículas $\beta$:} Medir la atenuación continua de los electrones emitidos por una fuente de $^{90}\text{Sr}$ al interponer láminas de aluminio y plomo de distinto grosor, para calcular su rango máximo ($R$), su coeficiente de absorción y estimar la energía máxima teórica de la desintegración. %
-    \item \textbf{Apantallamiento y detección de radiación $\alpha$ y $\gamma$:} Analizar el poder de penetración y la eficiencia relativa del detector frente a emisores $\alpha$ ($^{238}\text{Pu}$) y fotones $\gamma$ ($^{60}\text{Co}$ o $^{133}\text{Ba}$), comprobando la eficacia atenuadora de materiales como el papel, el aluminio y el plomo. %
+    \item \textbf{Caracterizar el tubo Geiger-Müller:} Obtendremos la curva \textit{plateau} variando el voltaje para buscar el punto de operación óptimo y calcular la pendiente de la zona de trabajo.
+    \item \textbf{Análisis estadístico:} Comprobaremos que la radiación de fondo sigue una estadística de Poisson y que las muestras de alta actividad se rigen por una distribución de Gauss.
+    \item \textbf{Atenuación geométrica:} Demostraremos que la tasa de detección disminuye de forma proporcional a la inversa del cuadrado de la distancia ($\sim 1/d^2$).
+    \item \textbf{Absorción de partículas $\beta$:} Calcularemos el coeficiente de absorción y el rango de frenado interponiendo láminas de aluminio, lo que nos permitirá estimar la energía máxima de la desintegración.
+    \item \textbf{Radiación $\alpha$ y $\gamma$:} Analizaremos cualitativamente el poder de penetración de partículas alfa ($^{238}\text{Pu}$) y fotones gamma ($^{60}\text{Co}$).
 \end{itemize}
 
 \section{Dispositivo Experimental}
 
-La instrumentación utilizada para el estudio de la radiación ionizante comprende: % [cite: 520]
+Para llevar a cabo las mediciones, montamos un dispositivo que consta del siguiente equipamiento:
 
 \begin{itemize}
-    \item \textbf{Tubo Geiger-Müller:} Detector cilíndrico de ionización con un radio de 1.43 cm y una longitud de 5.7 cm, provisto de una ventana de entrada delicada para partículas de bajo alcance. % [cite: 508, 515, 521]
-    \item \textbf{Contador digital:} Unidad SPECTEC conectada a PC que permite el control de la alta tensión (HV) y el registro de cuentas por intervalos programables. % [cite: 518, 522, 531]
-    \item \textbf{Banco de muestras:} Soporte con niveles o "escalones" situados a distancias fijas (separación de 1 cm entre ellos) para el estudio de la dependencia geométrica. % [cite: 634, 640]
-    \item \textbf{Juego de absorbentes:} Láminas de plomo y aluminio de diferentes espesores y densidades superficiales para los ensayos de absorción de partículas $\beta$. % [cite: 654, 656]
-    \item \textbf{Fuentes radiactivas:} Conjunto de emisores que incluye $^{90}\text{Sr}$ ($\beta$), $^{60}\text{Co}$ ($\gamma$), $^{238}\text{Pu}$ ($\alpha$) y $^{204}\text{Tl}$ ($\beta$). % [cite: 534, 535, 631]
+    \item \textbf{Tubo Geiger-Müller:} Detector cilíndrico de 1.43 cm de radio y 5.7 cm de longitud, conectado a un suministro de alta tensión (HV).
+    \item \textbf{Contador digital:} Unidad SPECTEC conectada al PC que permite el control del voltaje y el registro de las cuentas.
+    \item \textbf{Banco de muestras:} Soporte escalonado diseñado para colocar la fuente a distancias precisas, separadas por 1 cm.
+    \item \textbf{Filtros:} Diferentes láminas de plomo y aluminio de espesor y densidad superficial conocidas.
+    \item \textbf{Fuentes radiactivas:} Conjunto de emisores de distinta naturaleza: $^{90}\text{Sr}$ ($\beta$), $^{60}\text{Co}$ ($\gamma$), $^{238}\text{Pu}$ ($\alpha$) y $^{204}\text{Tl}$ ($\beta$).
 \end{itemize}
 
 \section{Procedimiento Experimental}
 
-La toma de datos se ha estructurado en varias fases para estudiar tanto la respuesta instrumental del detector como las propiedades intrínsecas de las diferentes radiaciones. % [cite: 509]
+Procedimos a realizar la práctica dividiendo la toma de datos en varias etapas:
 
-El desarrollo de la práctica se dividió en las siguientes etapas principales:
+\subsection{Curva \textit{plateau}}
+Para el apartado de la curva característica, procedimos a caracterizar el tubo midiendo en primer lugar la tasa de conteo al variar progresivamente la tensión. Partiendo de 700 V, incrementamos el potencial en pasos de 25 V hasta alcanzar los 1200 V, registrando las cuentas en intervalos de 30 segundos. Con estos datos identificamos la región de meseta y fijamos la tensión de trabajo para el resto de la práctica en 1000 V.
 
-\subsection{Determinación de la curva \textit{plateau}}
-Para establecer el voltaje óptimo de operación del tubo Geiger-Müller, se midió la tasa de conteo de diversas muestras ($^{90}\text{Sr}$, $^{204}\text{Tl}$, $^{60}\text{Co}$ y $^{238}\text{Pu}$) variando la tensión de alimentación. % [cite: 525, 535]
-Partiendo de 700 V (voltaje de arranque), se incrementó el potencial en pasos de 25 V hasta un máximo de 1200 V, registrando los pulsos en intervalos de 30 segundos. % [cite: 526, 533]
-A partir de la representación gráfica de estos datos, se identificó la región de \textit{plateau} y se calculó su pendiente (que debe ser inferior al 10\% de incremento por cada 100 V), fijando finalmente el voltaje de trabajo en torno a los 1000 V. % [cite: 527, 528]
+\subsection{Análisis estadístico}
+A continuación, ajustamos el equipo para medir la radiación ambiental. Tomamos más de 100 mediciones rápidas de 2 segundos sin ninguna muestra radiactiva presente, con el fin de estudiar el ruido de fondo. Seguidamente, introdujimos la fuente activa de $^{90}\text{Sr}$ y realizamos más de 500 mediciones de 1 segundo para obtener datos suficientes y analizar la distribución de Gauss.
 
-\subsection{Análisis estadístico (Distribuciones de Poisson y Gauss)}
-Con el voltaje de operación fijado, se estudió el carácter estocástico de la radiación bajo dos regímenes distintos:
-\begin{itemize}
-    \item \textbf{Radiación de fondo (Poisson):} Se tomaron más de 100 medidas de corta duración (2 s) en ausencia de muestra radiactiva. % [cite: 577, 588]
-    Al tratarse de una tasa de conteo muy baja (procedente principalmente de muones y radiación cósmica), los datos se agruparon en un histograma de frecuencias y se ajustaron a una distribución discreta y asimétrica de Poisson, verificando que la varianza coincidiera estadísticamente con la media. % [cite: 560, 577, 581]
-    \item \textbf{Radiación de la muestra (Gauss):} Se introdujo una fuente activa ($^{90}\text{Sr}$ o $^{137}\text{Cs}$) y se registraron más de 500 medidas de 1 segundo de duración. % [cite: 627, 628, 631]
-    Dado el elevado número de sucesos independientes, el histograma resultante se ajustó a una distribución continua y simétrica de Gauss. % [cite: 620, 621, 623]
-\end{itemize}
+\subsection{Dependencia con la distancia}
+Para estudiar la atenuación geométrica, utilizamos la fuente de $^{90}\text{Sr}$ y fuimos alejándola del detector bajando escalón a escalón en el soporte (en intervalos de 1 cm). En cada posición, tomamos 5 mediciones de 10 segundos para poder calcular un valor medio fiable y su incertidumbre.
 
-\subsection{Dependencia geométrica con la distancia}
-Para comprobar la ley de la inversa del cuadrado, se utilizó la fuente de $^{90}\text{Sr}$ (asumida como puntual e isótropa) y se varió sistemáticamente la distancia entre esta y la ventana del detector en pasos de 1 cm. % [cite: 633, 634, 640]
-Se tomaron 5 medidas de 10 segundos en cada escalón espacial. % [cite: 639]
-Los datos de actividad frente a distancia se ajustaron analíticamente considerando el ángulo sólido del detector, lo que permitió además estimar la actividad inicial de la muestra y, por consiguiente, su antigüedad. % [cite: 635, 636, 637]
-
-\subsection{Absorción y apantallamiento en la materia}
-Finalmente, se evaluó el poder de penetración de las distintas radiaciones al atravesar materiales absorbentes:
-\begin{itemize}
-    \item \textbf{Partículas $\beta$:} Se colocó la fuente de $^{90}\text{Sr}$ en una posición fija y se interpusieron láminas de aluminio y plomo de densidad superficial conocida. % [cite: 654, 656]
-    Tomando varias medidas por lámina, se obtuvo una curva de transmisión exponencial que permitió deducir el coeficiente de absorción y el rango máximo ($R$) en la aproximación de frenado continuo (CSDA). % [cite: 653, 655]
-    A partir de este rango, se estimó la energía máxima teórica de las partículas $\beta$ emitidas. % [cite: 659]
-    \item \textbf{Radiación $\alpha$ y $\gamma$:} Se comprobó la alta capacidad de penetración de los fotones $\gamma$ frente a la exigua capacidad de las partículas $\alpha$, midiendo la tasa de atenuación al interponer barreras de papel, aluminio y plomo ante fuentes puras de $^{238}\text{Pu}$ y $^{60}\text{Co}$. % [cite: 666, 668]
-\end{itemize}
-
+\subsection{Absorción en la materia}
+Por último, para analizar la absorción material, mantuvimos la fuente fija y fuimos añadiendo láminas de aluminio entre la muestra y el detector. Tomamos varias medidas para cada grosor de placa, repitiendo el proceso posteriormente con láminas de plomo.
 
 \section{Resultados y Discusión}
-holaaa
+
+\subsection{Determinación de la curva \textit{plateau}}
+
+Procedimos a caracterizar el comportamiento del detector graficando las curvas de calibración para los diferentes radioisótopos. En las Figuras \ref{fig:plateau_sr_pu} y \ref{fig:plateau_tl_co} observamos la tasa de conteo en función del voltaje.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/plateau-sr-pu.jpeg}
+    \caption{Curvas \textit{plateau} para $^{90}\text{Sr}$ y $^{238}\text{Pu}$}
+    \label{fig:plateau_sr_pu}
+\end{figure}
+
+Como podemos observar en la Figura \ref{fig:plateau_sr_pu}, las muestras de $^{90}\text{Sr}$ y $^{238}\text{Pu}$ presentan una alta actividad. Una vez superado el voltaje umbral, la tasa de cuentas se estabiliza. Al realizar el ajuste lineal en esta región de meseta, obtuvimos una pendiente de $2.31 \pm 0.17 \text{ cuentas/V}$ para el Estroncio y de $4.22 \pm 0.55 \text{ cuentas/V}$ para el Plutonio. Ambos valores cumplen el criterio teórico de presentar una variación inferior al 10\% por cada 100 V.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/plateau-tl-co.jpeg}
+    \caption{Curvas \textit{plateau} para $^{204}\text{Tl}$ y $^{60}\text{Co}$}
+    \label{fig:plateau_tl_co}
+\end{figure}
+
+Por el contrario, al observar la Figura \ref{fig:plateau_tl_co}, vemos que la tasa de conteo es drásticamente inferior. Las pendientes obtenidas son casi nulas: $0.07 \pm 0.01 \text{ cuentas/V}$ para el Cobalto y $0.08 \pm 0.01 \text{ cuentas/V}$ para el Talio. Esta gran diferencia de cuentas en el $^{60}\text{Co}$ se debe a que la radiación $\gamma$ (fotones) tiene una probabilidad de interacción muy baja con el gas que rellena el tubo. En el caso del Talio, la baja actividad nos indica que la muestra se encuentra en un estado de decaimiento muy avanzado. En vista de los resultados, trabajar a 1000 V nos asegura estar operando dentro de la región de meseta para todas las muestras.
+
+\subsection{Naturaleza estadística de la radiación}
+
+Para entender mejor cómo fluctúa la medición de radiactividad, analizamos la dispersión de los datos recogidos en intervalos fijos de tiempo.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/ajuste-poison.jpeg}
+    \caption{Ajuste de la radiación de fondo (Poisson)}
+    \label{fig:poisson}
+\end{figure}
+
+Al medir la radiación de fondo (Figura \ref{fig:poisson}), comprobamos que el histograma se ajusta perfectamente a una distribución de Poisson, arrojando un valor medio de $\mu = 1.24 \pm 0.02 \text{ cuentas/2s}$ y una desviación estándar de $\sigma = 1.11 \pm 0.13 \text{ cuentas/2s}$. Como la varianza ($\sigma^2 \approx 1.23$) es prácticamente igual a la media, confirmamos el carácter poissoniano del fondo. Conociendo las dimensiones del tubo, calculamos un área efectiva de $\approx 57.65 \text{ cm}^2$. Esto nos da como resultado un flujo de fondo de $0.64 \text{ incidentes/(cm}^2\cdot\text{min)}$, un valor que cuadra con la incidencia esperada de rayos cósmicos a nivel del mar.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/ajuste.jpeg}
+    \caption{Comparativa de ajustes para una muestra activa}
+    \label{fig:gauss}
+\end{figure}
+
+Sin embargo, cuando introducimos la fuente de $^{90}\text{Sr}$ en el detector (Figura \ref{fig:gauss}), el régimen cambia. Al procesar las cuentas, obtenemos una media muy elevada ($\mu = 641.2 \pm 0.8 \text{ cuentas/s}$). Debido a este gran número de eventos, la asimetría de Poisson desaparece y la distribución de los datos se ajusta con gran precisión a una campana de Gauss continua y simétrica, de acuerdo con el Teorema del Límite Central.
+
+\subsection{Atenuación geométrica con la distancia}
+
+A continuación, evaluamos la caída del flujo de partículas al separar progresivamente la fuente del detector.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/cuentas-distancia.jpeg}
+    \caption{Tasa de conteo en función de la distancia}
+    \label{fig:distancia}
+\end{figure}
+
+En la Figura \ref{fig:distancia} podemos observar que, al intentar ajustar los datos asumiendo que la fuente es un punto ideal (caída $1/d^2$), el ajuste se desvía considerablemente a distancias cortas. Para corregir esto, aplicamos un modelo "no puntual" que tiene en cuenta el ángulo sólido real de la ventana del Geiger. Este segundo ajuste funciona perfectamente y nos da un parámetro de actividad de $A = 7436.8 \pm 120.3 \text{ Bq}$. Sabiendo que la actividad teórica inicial de fábrica era de $3700 \text{ Bq}$ y que el isótopo se encuentra en equilibrio secular con el $^{90}\text{Y}$, el valor obtenido por nuestro ajuste resulta coherente con la actividad esperada.
+
+\subsection{Absorción de partículas \texorpdfstring{$\beta$}{beta}}
+
+Para el apartado de la atenuación material, implementamos el circuito de placas de aluminio con el objetivo de ver cómo el material iba frenando los electrones emitidos por el Estroncio.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{img/cuentas-densidad-superficial.jpeg}
+    \caption{Cuentas detectadas en función del grosor de aluminio}
+    \label{fig:absorcion_al}
+\end{figure}
+
+Tal y como se aprecia en la Figura \ref{fig:absorcion_al}, la tasa de cuentas decae de forma exponencial a medida que aumentamos la densidad superficial del absorbente. A partir del ajuste, calculamos un coeficiente de absorción másico de $\mu_m = 4.31 \text{ cm}^2/\text{g}$. 
+Fijándonos en el punto donde la señal de las partículas se confunde con el ruido de fondo, estimamos un rango de frenado $R \approx 849 \text{ mg/cm}^2$. Utilizando la relación empírica para el aluminio ($E_{max} = 1.84 \cdot R + 0.294$), obtenemos una energía máxima de $1.856 \text{ MeV}$. Este resultado es muy revelador, ya que la energía de emisión del $^{90}\text{Sr}$ es de tan solo $0.546 \text{ MeV}$. Esto demuestra que estamos detectando principalmente las partículas de alta energía procedentes del decaimiento de su isótopo hijo, el $^{90}\text{Y}$ ($2.28 \text{ MeV}$).
+
+\subsection{Apantallamiento de radiación \texorpdfstring{$\alpha$ y $\gamma$}{alfa y gamma}}
+
+Por último, evaluamos el poder de penetración de otros tipos de radiación disponibles en el laboratorio. Al colocar la fuente de $^{238}\text{Pu}$ (que emite partículas alfa), observamos que bastaba con interponer una simple hoja de papel para que la tasa de detección cayera al nivel del fondo ambiental. Esto confirma el alcance extremadamente corto de este tipo de radiación masiva. 
+Por el contrario, al medir el $^{60}\text{Co}$, comprobamos que los fotones gamma atravesaban el aluminio sin apenas sufrir atenuación, requiriendo láminas muy gruesas de plomo para notar una disminución significativa en las cuentas.
+
+\section{Conclusiones}
+
+En esta práctica se ha caracterizado el funcionamiento de un detector Geiger-Müller, determinando que su tensión de operación óptima se encuentra en torno a los 1000 V. Los resultados obtenidos para las curvas \textit{plateau} confirman que, en esta región de meseta, el detector es estable y presenta una pendiente de conteo inferior al 10\% por cada 100 V, lo cual es coherente con el \textbf{valor referencial} esperado para este tipo de instrumentación comercial.
+
+El análisis estadístico ha permitido validar la naturaleza estocástica de la radiación. Se ha comprobado que el fondo ambiental sigue estrictamente una distribución de Poisson, mientras que las fuentes de mayor actividad, como el $^{90}\text{Sr}$, transicionan hacia una distribución gaussiana debido al elevado número de eventos registrados ($\mu \approx 641$ cuentas/s). Además, el estudio de la atenuación geométrica demostró que la aproximación de fuente puntual ($1/d^2$) falla a distancias cortas, siendo necesario aplicar una corrección por ángulo sólido para obtener un ajuste físicamente válido.
+
+Finalmente, las pruebas de absorción han revelado las diferencias en el poder de penetración de las partículas $\alpha$, $\beta$ y $\gamma$. Un resultado especialmente relevante fue el cálculo del rango de frenado en aluminio ($R \approx 849 \text{ mg/cm}^2$), cuya energía máxima asociada ($1.856 \text{ MeV}$) confirma que en la muestra de Estroncio no solo detectamos el propio isótopo, sino principalmente las emisiones de alta energía de su hijo, el $^{90}\text{Y}$. En definitiva, la práctica ha servido para contrastar con éxito los modelos teóricos de interacción radiación-materia con las limitaciones y comportamientos reales observados en el laboratorio.
+
+\appendix
+
+\section{Cálculo de Incertidumbres}
+
+Todo el tratamiento de datos y los ajustes de las gráficas presentadas en este informe se han programado mediante Python. Para calcular las incertidumbres hemos aplicado los siguientes criterios:
+
+\subsection*{1. Incertidumbre estadística (Poisson)}
+Dado que la desintegración radiactiva es un proceso aleatorio, asumimos que el número de cuentas registradas sigue una estadística de Poisson. Por lo tanto, para una única medición que registra $N$ cuentas (como hicimos en la curva \textit{plateau}), la incertidumbre asignada es directamente la raíz cuadrada del valor obtenido:
+\vspace{0.2cm}
+\begin{equation*}
+    \delta N = \sqrt{N}
+\end{equation*}
+
+\subsection*{2. Incertidumbre en mediciones repetidas}
+En los apartados de distancia y absorción, tomamos 5 medidas sucesivas ($N_1, \dots, N_5$) para cada punto y representamos la media $\bar{N}$.
+Para asegurar una cota de error rigurosa, definimos la incertidumbre final como el valor máximo entre la predicción teórica de Poisson y la desviación estándar real de nuestras 5 mediciones:
+\vspace{0.2cm}
+\begin{equation*}
+    \delta \bar{N} = \max \left( \sqrt{\bar{N}} \; , \; \sqrt{\frac{1}{n-1}\sum_{i=1}^{n} (N_i - \bar{N})^2} \right)
+\end{equation*}
+\vspace{0.2cm}
+
+De esta forma, si el equipo o la medición tuvieron variaciones experimentales mayores a lo estadísticamente esperado, el error de nuestras gráficas las tendrá en cuenta.
+
+\subsection*{3. Incertidumbre en histogramas}
+Al representar las probabilidades ($p_i$) en los diagramas de barras de las distribuciones, donde se registran $c_i$ eventos sobre un total $N_{tot}$ de mediciones, el error asignado a cada barra se calculó como:
+\vspace{0.2cm}
+\begin{equation*}
+    \delta p_i = \frac{\sqrt{c_i}}{N_{tot}}
+\end{equation*}
+
+\subsection*{4. Error de los parámetros de ajuste}
+Para obtener variables como las pendientes, el parámetro geométrico $A$ o el coeficiente de absorción $\mu_m$, utilizamos las funciones de ajuste no lineal. El error reportado en el texto para cada variable se ha extraído directamente calculando la raíz cuadrada de la diagonal de la matriz de covarianza
+\vspace{0.2cm}
+\begin{equation*}
+    \delta a_j = \sqrt{\Sigma_{jj}}
+\end{equation*}
 
 \end{document}
