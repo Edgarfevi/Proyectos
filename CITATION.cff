@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: 'If you use this repository in academic work, please cite it using this metadata.'
+title: 'Proyectos'
+authors:
+  - family-names: 'Fernández Vigil'
+    given-names: 'Edgar'
+    alias: 'Edgarfevi'
+repository-code: 'https://github.com/Edgarfevi/Proyectos'
+url: 'https://github.com/Edgarfevi/Proyectos'
+license: 'MIT'
+version: '1.0.0'
+date-released: '2026-04-20'

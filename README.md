@@ -16,6 +16,9 @@
 - [🛠️ Tecnologías Utilizadas](#tecnologías-utilizadas)
 - [🚀 Instalación y Uso](#-instalación-y-uso)
 - [🤝 Contribuciones](#-contribuciones)
+- [🔐 Seguridad](#-seguridad)
+- [📚 Citacion](#-citacion)
+- [📄 Licencia](#-licencia)
 - [📧 Contacto](#-contacto)
 
 ---
@@ -202,6 +205,28 @@ Este es un repositorio personal de aprendizaje, pero las sugerencias son siempre
 1. Abre un **Issue**.
 2. Haz un **Fork** del repositorio.
 3. Crea una **Pull Request**.
+
+Guia completa en [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 🔐 Seguridad
+
+Si detectas una vulnerabilidad, revisa [SECURITY.md](SECURITY.md) para el proceso de reporte responsable.
+
+---
+
+## 📚 Citacion
+
+Si usas este repositorio en trabajos academicos, puedes citarlo con [CITATION.cff](CITATION.cff).
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo la licencia **MIT**.
+
+Consulta el archivo [LICENSE](LICENSE) para más detalles.
 
 ---
 
