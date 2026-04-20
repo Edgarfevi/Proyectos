@@ -1,6 +1,6 @@
 # 🚀 Proyectos
 
-> Repositorio personal de proyectos, experimentos y aprendizaje continuo
+> Repositorio personal de proyectos, experimentos y aprendizaje continuo.
 
 [![GitHub](https://img.shields.io/badge/GitHub-Edgarfevi-181717?style=flat&logo=github)](https://github.com/Edgarfevi)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
@@ -10,23 +10,24 @@
 
 ## 📋 Tabla de Contenidos
 
-- [Descripción](#-descripción)
-- [Estructura del Repositorio](#-estructura-del-repositorio)
-- [Proyectos Destacados](#-proyectos-destacados)
-- [Tecnologías Utilizadas](#-tecnologías-utilizadas)
-- [Instalación y Uso](#-instalación-y-uso)
-- [Contribuciones](#-contribuciones)
+- [📖 Descripción](#-descripción)
+- [📁 Estructura del Repositorio](#-estructura-del-repositorio)
+- [⭐ Proyectos Destacados](#-proyectos-destacados)
+- [🛠️ Tecnologías Utilizadas](#tecnologías-utilizadas)
+- [🚀 Instalación y Uso](#-instalación-y-uso)
+- [🤝 Contribuciones](#-contribuciones)
+- [📧 Contacto](#-contacto)
 
 ---
 
 ## 📖 Descripción
 
-Este repositorio es mi espacio personal de desarrollo donde reúno diversos proyectos académicos, profesionales y experimentales. Sirve como punto central para:
+Este repositorio reúne proyectos académicos, profesionales y experimentales en un único lugar. Incluye trabajo en distintas áreas:
 
-- 🎯 **Proyectos de Hackathons y Datathons**
-- 🔬 **Simulaciones y cálculos científicos**
-- 🤖 **Desarrollos en Inteligencia Artificial**
-- 🌐 **Aplicaciones web**
+- 🎯 **Hackathons y Datathons**
+- 🔬 **Simulaciones y cálculo científico**
+- 🤖 **Inteligencia Artificial y agentes**
+- 🌐 **Aplicaciones web full-stack**
 - 📚 **Apuntes y material educativo**
 - 🧪 **Experimentación con nuevas tecnologías**
 
@@ -35,97 +36,94 @@ Este repositorio es mi espacio personal de desarrollo donde reúno diversos proy
 ## 📁 Estructura del Repositorio
 
 ### 🎓 **APUNTES/**
-Notas y materiales educativos, incluyendo:
-- Notebooks de Jupyter con apuntes
-- **Montaña Rusa**: Simulaciones 2D y 3D de física de montañas rusas
-  - Cálculos matemáticos y visualizaciones
-  - Modelos en Python
+Notas y materiales educativos.
+
+- Notebooks de clase y ejercicios.
+- **Montaña Rusa**: simulaciones 2D y 3D con modelos físicos en Python.
+
+### ☕ **Cursos/**
+Material práctico de formación y cuadernos por asignaturas/temas.
 
 ### 📊 **Datathon/**
-Proyectos de competiciones de ciencia de datos:
-- Modelos de predicción
-- Análisis de datasets
-- Scripts de procesamiento de datos (IBI)
-- 2 aplicaciones web completas
+Proyectos de ciencia de datos.
+
+- Modelos de predicción.
+- Limpieza y procesamiento de datasets.
+- Scripts y análisis exploratorio.
+
+### ⚛️ **FISICA/**
+Proyectos de física aplicada y métodos numéricos.
+
+- **Electronica/**: gráficas y prácticas de laboratorio.
+- **FAEA/**: recursos, resultados y programación científica.
+- **MNAF2025/**: trabajo de métodos numéricos aplicados a física.
+- **Optica/**: prácticas y entregas.
+- **TEIII/**: informes, gráficas y utilidades de asignatura.
+
+### 🏭 **Hack_arcelor/**
+Soluciones de hackathon con notebooks, optimizaciones y benchmarks en CSV.
 
 ### 🏆 **Hackathon_agenteia/**
-Proyectos de hackathon enfocados en agentes de IA:
-- Implementaciones de agentes inteligentes
-- Material de formación en LLMs
-- Ejemplos de RAG (Retrieval-Augmented Generation)
+Proyectos de IA aplicada a agentes.
+
+- Implementaciones de agentes inteligentes.
+- Material de formación en LLMs.
+- Pruebas de pipelines tipo RAG.
 
 ### 🏥 **Hackathon_salud/**
-Hackathon del sector salud:
-- Análisis de enfermedades crónicas renales
-- Notebooks con visualizaciones
-- Datasets médicos
+Análisis de datos en salud.
+
+- Notebooks de exploración.
+- Modelado sobre enfermedad renal crónica.
 
 ### 🤖 **IA/**
-Proyectos de Inteligencia Artificial:
-- **Imagenes_temp**: Entorno virtual con herramientas de Jupyter
-- **LUCAS**: Laboratorios de redes neuronales
-- **Scripts**: Utilidades de conversión LaTeX, PDF a imagen
+Laboratorios y scripts de IA.
+
+- **LUCAS/**: prácticas de redes neuronales.
+- **scripts/**: conversión LaTeX y utilidades de procesamiento.
 
 ### 📝 **Latex/**
-Plantillas y documentos LaTeX:
-- Portadas para trabajos de métodos numéricos
-- Templates académicos personalizados
+Plantillas y portadas académicas en LaTeX.
 
 ### 🐍 **Proyectos_python/**
-Colección organizada de proyectos Python:
-
-#### **FISICA/**
-- **Electrónica**: Gráficas de prácticas de laboratorio
-- **FAEA**: Física Acelerodes y altas energías
-- **MNAF2025**: Métodos Numéricos aplicados a la físcia 
-  - Entorno virtual completo
-  - Proyectos de montaña rusa
-- **Óptica**: Proyectos de laboratorio de óptica
-- **TEIII**: Tecnicas experimantes, codigos de uso en la asignatrua
-
-#### **Mis_cosas/**
-- Aplicaciones personales
-- Herramientas de productividad
-- Calendario
-- Scripts de utilidad
-
-#### **presentaciones_manim/**
-- Animaciones matemáticas con Manim
-- Media y archivos de presentaciones
+Colección de proyectos personales y experimentos en Python.
 
 ### 🌌 **spaceapp/**
-Trabajo relacionado con el hackathon spaceapp de la Nasa:
-- API para órbitas
-- Cálculos astronómicos
-- Juego completo realizado para el hackathon
+Trabajo relacionado con NASA Space Apps.
+
+- Cálculos astronómicos.
+- Código de apoyo para el hackathon.
 
 ### 🌐 **web_asturismo/**
-Aplicación web completa:
-- **Backend**: API REST
-- **Frontend**: React + Vite
-  - Configuración moderna de desarrollo
-  - Interfaz de usuario responsiva
+Aplicación web completa.
+
+- **Backend/**: API.
+- **Frontend/**: React + Vite.
 
 ---
 
 ## ⭐ Proyectos Destacados
 
 ### 🎢 Simulador de Montaña Rusa
-Simulación física completa de una montaña rusa con visualizaciones 2D y 3D.
-- 📂 `APUNTES/montaña_rusa/`
-- 📂 `Proyectos_python/FISICA/MNAF2025/montaña_rusa/`
+Simulación física de montaña rusa con visualizaciones 2D y 3D.
+
+- 📂 [APUNTES/montaña_rusa/](APUNTES/montaña_rusa/)
+- 📂 [FISICA/MNAF2025/montaña_rusa/](FISICA/MNAF2025/montaña_rusa/)
 
 ### 🤖 Agentes de IA
-Desarrollo de agentes inteligentes con capacidades avanzadas de procesamiento de lenguaje natural.
-- 📂 `Hackathon_agenteia/`
+Desarrollo de agentes inteligentes y experimentación con modelos de lenguaje.
+
+- 📂 [Hackathon_agenteia/](Hackathon_agenteia/)
 
 ### 🏥 Análisis de Salud
-Modelos predictivos para enfermedades crónicas renales.
-- 📂 `Hackathon_salud/`
+Modelos predictivos y análisis de datos médicos.
+
+- 📂 [Hackathon_salud/](Hackathon_salud/)
 
 ### 🌐 Web Asturismo
-Aplicación web full-stack para turismo.
-- 📂 `web_asturismo/`
+Proyecto full-stack orientado a turismo.
+
+- 📂 [web_asturismo/](web_asturismo/)
 
 ---
 
@@ -140,15 +138,15 @@ Aplicación web full-stack para turismo.
 - ![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
 - ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
 - ![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=flat&logo=jupyter&logoColor=white)
-- **Manim**: Animaciones matemáticas
-- **NumPy, Pandas**: Análisis de datos
-- **Matplotlib**: Visualizaciones
+- **NumPy, Pandas** para análisis de datos.
+- **Matplotlib** para visualización.
+- **Manim** para animaciones matemáticas.
 
 ### Herramientas
 - ![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white)
 - ![VS Code](https://img.shields.io/badge/VS%20Code-007ACC?style=flat&logo=visual-studio-code&logoColor=white)
-- Virtual Environments (venv)
-- Jupyter Notebook/Lab
+- Entornos virtuales (**venv**).
+- Jupyter Notebook / JupyterLab.
 
 ---
 
@@ -158,7 +156,7 @@ Aplicación web full-stack para turismo.
 - Python 3.12+
 - Node.js (para proyectos web)
 - Jupyter Notebook/Lab
-- Git LFS (para archivos grandes)
+- Git (y opcionalmente Git LFS para archivos grandes)
 
 ### Clonar el Repositorio
 ```bash
@@ -169,12 +167,13 @@ cd Proyectos
 ### Para Proyectos Python
 ```bash
 # Crear entorno virtual
-python -m venv venv
+python -m venv .venv
 
-# Activar entorno virtual
-source venv/bin/activate  # Linux/Mac
-# o
-venv\Scripts\activate  # Windows
+# Activar entorno virtual (Linux/Mac)
+source .venv/bin/activate
+
+# Actualizar pip
+pip install --upgrade pip
 
 # Instalar dependencias (si existe requirements.txt)
 pip install -r requirements.txt
@@ -198,17 +197,20 @@ npm run dev
 
 ## 🤝 Contribuciones
 
-Este es un repositorio personal de aprendizaje, pero las sugerencias y comentarios son siempre bienvenidos. Si encuentras algo interesante o tienes ideas para mejorar algún proyecto, no dudes en:
+Este es un repositorio personal de aprendizaje, pero las sugerencias son siempre bienvenidas. Si encuentras algo interesante o tienes ideas para mejorar algún proyecto:
 
-1. Abrir un **Issue**
-2. Hacer un **Fork** del repositorio
-3. Crear una **Pull Request**
+1. Abre un **Issue**.
+2. Haz un **Fork** del repositorio.
+3. Crea una **Pull Request**.
 
 ---
 
 ## 📧 Contacto
 
-**Edgar** - [Edgarfevi@outlook.es](https://github.com/Edgarfevi)
+**Edgar**
+
+- GitHub: [Edgarfevi](https://github.com/Edgarfevi)
+- Email: [Edgarfevi@outlook.es](mailto:Edgarfevi@outlook.es)
 
 ---
 
