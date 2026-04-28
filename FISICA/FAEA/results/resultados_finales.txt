@@ -5,18 +5,18 @@
 PROCESO              |         EVENTOS
 ----------------------------------------
 qcd                  |            0.00
-wjets                |           76.53
-ww                   |            0.94
-wz                   |            0.58
-zz                   |            0.11
-dy                   |           14.25
-single_top           |           35.28
+wjets                |            2.14
+ww                   |            0.02
+wz                   |            0.14
+zz                   |            0.02
+dy                   |            1.80
+single_top           |            8.42
 ----------------------------------------
-TOTAL FONDO (MC)     |          127.69
-SENAL EXPECT. (tt)   |          369.27
+TOTAL FONDO (MC)     |           12.54
+SENAL EXPECT. (tt)   |          138.89
 ----------------------------------------
-OBSERVADO (DATA)     |          539.00
+OBSERVADO (DATA)     |          158.00
 ====================================================
 
-Pureza esperada (S/S+B): 74.31%
-Exceso de datos (S_neta): 411.31 eventos
+Pureza esperada (S/S+B): 91.72%
+Exceso de datos (S_neta): 145.46 eventos

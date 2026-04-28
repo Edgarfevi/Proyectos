@@ -1,16 +1,19 @@
 INFORME FINAL DE MEDICION: QUARK TOP
-========================================
-Eventos Observados (Data):      539.00
-Eventos de Fondo (Suma MC):     127.69
-Eventos Netos de Senal:         411.31
-----------------------------------------
-Eventos Fiduciales (Generador): 6334
-Eventos Reconstruidos (MC):     1845
-----------------------------------------
-Aceptancia (A):                 0.1715
-Eficiencia cinemática (eps_r):  0.2913
-Eficiencia constante  (eps_c):  0.9405
-Eficiencia TOTAL      (eps):    0.2740
-----------------------------------------
-SECCION EFICAZ FINAL (sigma):   175.13 pb
-========================================
+==================================================
+Eventos Observados (Data):      158.00
+Eventos de Fondo (Suma MC):     12.54
+Eventos Netos de Senal:         145.46
+--------------------------------------------------
+Aceptancia (A):                 0.1239
+Eficiencia TOTAL (eps):         0.1399
+--------------------------------------------------
+SECCION EFICAZ FINAL (sigma):   167.79 pb
+--------------------------------------------------
+DESGLOSE DE INCERTIDUMBRES:
+  Estadistica:    +/- 14.50 pb
+  Sistematica:    +/- 16.25 pb
+  Luminosidad:    +/- 15.25 pb
+==================================================
+RESULTADO FINAL:
+sigma = 167.79 +/- 14.50 (stat) +/- 16.25 (syst) +/- 15.25 (lumi) pb
+==================================================

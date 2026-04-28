@@ -10,7 +10,8 @@ class Selector:
         self.filename = self.name if self.name.endswith('.root') else self.name + '.root'
         
 
-        if not os.path.exists(self.filename): self.filename = 'Datos/' + self.filename
+        if not os.path.exists(self.filename): 
+            self.filename = 'Datos/' + self.filename
         
         self.CreateHistograms()
         self.Loop()
@@ -35,7 +36,8 @@ class Selector:
     def GetHisto(self, name):
         target = self.name + '_' + name
         for h in self.histograms:
-            if target == h.GetName(): return h
+            if target == h.GetName(): 
+                return h
         return r.TH1F()
 
     def Loop(self):
@@ -52,14 +54,18 @@ class Selector:
                 pt_q1_W = np.sqrt(event.MChadronicWDecayQuark_px**2 + event.MChadronicWDecayQuark_py**2)
                 pt_q2_W = np.sqrt(event.MChadronicWDecayQuarkBar_px**2 + event.MChadronicWDecayQuarkBar_py**2)
                 
+                # 3. Calculamos pT del lepton (muon) para el corte de eficiencia
+                lepton_pt = np.sqrt(event.MClepton_px**2 + event.MClepton_py**2)
+                
                 # Definimos la REGION FIDUCIAL:
                 # Pedimos que los 4 quarks principales tengan pT > 30 GeV 
                 # (Esto asegura que el evento "debería" dar al menos 4 jets en el detector)
-                if pt_b_had > 30 and pt_b_lep > 30 and pt_q1_W > 30 and pt_q2_W > 30:
+                if pt_b_had > 30 and pt_b_lep > 30 and pt_q1_W > 30 and pt_q2_W > 30 and lepton_pt > 27:
                     self.GetHisto('Fiducial').Fill(pt_b_had)
 
             # --- 1. SELECCION DE RECONSTRUCCION (NIVEL DETECTOR) ---
-            if event.NMuon != 1: continue 
+            if event.NMuon != 1: 
+                continue 
             muon = r.TLorentzVector()
             muon.SetPxPyPzE(event.Muon_Px[0], event.Muon_Py[0], event.Muon_Pz[0], event.Muon_E[0])
             
@@ -67,24 +73,31 @@ class Selector:
             weight = event.EventWeight if self.name != 'data' else 1.0
 
             # Eficiencia de Trigger (Denominador)
-            if muon.Pt() > 20: self.GetHisto('MuonPt_st').Fill(muon.Pt(), weight)
+            if muon.Pt() > 20: 
+                self.GetHisto('MuonPt_st').Fill(muon.Pt(), weight)
 
             # Requisito de Trigger (Si no paso, no se guarda) [cite: 177, 191]
-            if not event.triggerIsoMu24: continue
+            if not event.triggerIsoMu24: 
+                continue
             
             # Eficiencia de Trigger (Numerador)
-            if muon.Pt() > 20: self.GetHisto('MuonPt_pass').Fill(muon.Pt(), weight)
+            if muon.Pt() > 20: 
+                self.GetHisto('MuonPt_pass').Fill(muon.Pt(), weight)
 
             # --- CORTES DE SELECCION FINAL (REGION DE SEÑAL) ---
-            if muon.Pt() < 28: continue
-            if event.NJet < 3: continue 
+            if muon.Pt() < 27: 
+                continue
+            if event.NJet < 3: 
+                continue 
             
-            # B-Tagging (Eq. de b-tagging del guion) [cite: 204, 213]
+            # B-Tagging (Eq. de b-tagging del guion)
             nbtags = sum(1 for i in range(event.NJet) if event.Jet_btag[i] > 2.0)
-            if nbtags < 1: continue 
+            if nbtags < 2: 
+                continue 
             
             # Factor de escala b-tagging para MC [cite: 209]
-            if self.name != 'data': weight *= 0.9 
+            if self.name != 'data': 
+                weight *= 0.9 
 
             # Relleno de Histogramas Finales
             self.GetHisto('MuonPt').Fill(muon.Pt(), weight)
@@ -93,5 +106,3 @@ class Selector:
             self.GetHisto('MET').Fill(np.sqrt(event.MET_px**2 + event.MET_py**2), weight)
         f.Close()
 
-    def Eficiencia(self):
-        self.GetHisto('Eficiencia').Divide(self.GetHisto('MuonPt_pass'), self.GetHisto('MuonPt_st'), 1.0, 1.0, "B")
