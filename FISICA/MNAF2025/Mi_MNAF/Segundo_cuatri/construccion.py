@@ -978,6 +978,8 @@ class construccion_individually:
             del self._keep_alive
             
         # PASO 2: Cerrar explícitamente canvases en motor ROOT (C++)
+        # Se cierran todos los canvases creados por plotter() y plot_mass_fits()
+        
         if hasattr(self, 'canvas_comparasion') and self.canvas_comparasion:
             self.canvas_comparasion.Close()  # Cierra canvas en ROOT
             self.canvas_comparasion = None    # Anula referencia Python
@@ -985,6 +987,14 @@ class construccion_individually:
         if hasattr(self, 'canvas_mass_invariant') and self.canvas_mass_invariant:
             self.canvas_mass_invariant.Close()
             self.canvas_mass_invariant = None
+            
+        if hasattr(self, 'canvas_mass_fits') and self.canvas_mass_fits:
+            self.canvas_mass_fits.Close()
+            self.canvas_mass_fits = None
+        
+        # PASO 2b: Limpiar referencias a leyendas y otros objetos gráficos
+        if hasattr(self, 'leyenda_mass_fits'):
+            self.leyenda_mass_fits = None
             
         # PASO 3: Invocar garbage collector Python para limpieza inmediata
         import gc

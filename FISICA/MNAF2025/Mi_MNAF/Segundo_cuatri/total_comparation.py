@@ -794,24 +794,31 @@ class total_comparation:
         2. Cerrar canvases de ROOT explícitamente
         3. Ejecutar recolector de basura de Python (gc.collect)
         """
-        
-        # Paso 1: Limpiar el "escudo" de referencias
-        # Este diccionario protege objetos ROOT de ser recolectados prematuramente
+        # Paso 1: Limpiar el "escudo" de referencias.
+        # Este diccionario protege objetos ROOT de ser recolectados prematuramente.
         if hasattr(self, '_keep_alive'):
             self._keep_alive.clear()
             del self._keep_alive
-            
-        # Paso 2: Cerrar canvases ROOT explícitamente en el motor de C++
-        # Necesario porque ROOT maneja su propia memoria fuera de Python
+
+        # Paso 2: Cerrar todos los canvases ROOT creados por la clase.
+        # ROOT gestiona su propia memoria, así que conviene cerrar explícitamente cada lienzo.
         if hasattr(self, 'canvas_comparasion') and self.canvas_comparasion:
             self.canvas_comparasion.Close()
             self.canvas_comparasion = None
-            
+
         if hasattr(self, 'canvas_mass_invariant') and self.canvas_mass_invariant:
             self.canvas_mass_invariant.Close()
             self.canvas_mass_invariant = None
-            
-        # Paso 3: Ejecutar recolector de basura de Python para liberar memoria
+
+        if hasattr(self, 'canvas_invariant_mass_overlay_channels') and self.canvas_invariant_mass_overlay_channels:
+            self.canvas_invariant_mass_overlay_channels.Close()
+            self.canvas_invariant_mass_overlay_channels = None
+
+        if hasattr(self, 'canvas_invariant_mass_overlay_types_by_channel') and self.canvas_invariant_mass_overlay_types_by_channel:
+            self.canvas_invariant_mass_overlay_types_by_channel.Close()
+            self.canvas_invariant_mass_overlay_types_by_channel = None
+
+        # Paso 3: Ejecutar recolector de basura de Python para liberar memoria.
         import gc
         gc.collect()
         
