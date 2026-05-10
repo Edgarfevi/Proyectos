@@ -1,0 +1,3 @@
+Para reproducir los resultados basta con tener los archivos en una carpeta que se llame Data a la misma altura que el ipynb y tener pyROOT instalado.
+
+No se puede ejecutar secuencialmente la primera vez, primero han de ser ejecutadas las celdas que incluyan metodos del archivo construccion, después se podra ejecutar secuencialmente las veces que se quiera.
