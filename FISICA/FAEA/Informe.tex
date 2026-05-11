@@ -1,0 +1,125 @@
+\documentclass[9pt,a4paper,twocolumn,twoside]{rho-class/rho}
+
+% --- 1. Idioma y matemáticas básicas ---
+\usepackage[spanish,es-nodecimaldot,es-noindentfirst,es-noshorthands]{babel}
+
+
+% --- 2. EL TRUCO DE MAGIA (BIEN ESCRITO) ---
+% Borramos los comandos problemáticos usando su nombre exacto interno
+\expandafter\let\csname not=\endcsname\relax
+\expandafter\let\csname not<\endcsname\relax
+\expandafter\let\csname not>\endcsname\relax
+
+% Ahora ya podemos cargar la fuente moderna sin que explote
+\usepackage{fontspec}
+\usepackage{unicode-math}
+% --- 3. Bibliografía ---
+\addbibresource{rho.bib}
+
+% --- 4. Datos del Informe ---
+\title{Estudio de la sección eficaz de producción de pares top-antitop en colisiones protón-protón a $\sqrt{s} = 7$ TeV con el detector CMS}
+\author{Edgar Fernández Vigil}
+\affil{Física - Facultad de Ciencias - Universidad de Oviedo}
+\dates{\today}
+\journalname{FAEA - Práctica de Laboratorio}
+\journal{Estudio de la sección eficaz de producción de pares top-antitop en colisiones protón-protón a $\sqrt{s} = 7$ TeV}
+
+% --- 5. Resumen ---
+\begin{abstract}
+En este iforme se detalla el análisis realizado para medir la sección eficaz de producción de pares top-antitop en colisiones protón-protón a una energía de $\sqrt{s} = 7$ TeV utilizando datos del detector CMS. Se describen los criterios de selección de eventos, la estimación de fondos, y la extracción de la señal. Finalmente, se presenta el resultado obtenido para la sección eficaz y su comparación con predicciones teóricas.
+\end{abstract}
+% ----------------------------------------------------------
+\begin{document}
+
+    \maketitle
+    \thispagestyle{firststyle}
+
+\section{Introducción}
+
+\rhostart{L}a sección eficaz de producción de pares top-antitop es una cantidad fundamental en la física de partículas, ya que proporciona información crucial sobre la interacción fuerte y el modelo estándar.
+
+En este caso estaremos analizando datos de colisiones protón-protón a una energía de $\sqrt{s} = 7$ TeV, obtenidos por el detector CMS en el LHC. El objetivo principal es medir la sección eficaz de producción de pares top-antitop y compararla con las predicciones teóricas.
+
+A primer orden en teoría de perturbaciones, los diagramas de Feynman que contribuyen a este proceso son la fusión de gluones, con cerca de un $80\%$ de la contribucióntotal, y la aniquilación quark-antiquark , con el $20\%$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\columnwidth]{img/Feynman_produccion_top_antitop.png}
+    \caption{Diagrama de Feynman del proceso de producción de pares top-antitop.}
+    \label{fig:Feynman_produccion_top_antitop}
+\end{figure}
+
+Primeramente debemos definir el canal de desintegración que vamos a estudiar. Dadas las características del detector y su capacidad para identificar leptones (especialmente muones) y reconstruir jets con alta precisión, nos centraremos en el que un W decae en un muon y un neutrino, mientras que el otro W decae en dos quarks. Este canal es conocido como el canal semileptónico.
+
+Por lo tanto, los productos de la desintegración que esperamos observar en el detector son:
+\begin{itemize}
+    \item Un muon de alta energía proveniente de la desintegración del W.
+    \item Un neutrino, que no interactúa con el detector y se manifestará como energía faltante (MET).
+    \item Dos jets provenientes de la hadronización de los quarks del otro W.
+    \item Dos jets adicionales provenientes de la hadronización de los quarks b del top y antitop (b-jets).
+\end{itemize}
+
+Existe otro canal de desintegración, el dileptónico, donde ambos W decaen en leptones (por ejemplo, dos muones), pero este canal tiene una tasa de eventos más baja y es más difícil de analizar debido a la presencia de dos neutrinos. Pero este canal es que que mejores medidas de la sección eficaz ha proporcionado, por lo que es un canal muy estudiado.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\columnwidth]{img/Feynman_desintegracion_top_antitop.png}
+    \caption{Diagrama de Feynman del proceso de desintegración de un par top-antitop en el canal semileptónico.}
+    \label{fig:Feynman_desintegracion_top_antitop}
+\end{figure}
+
+Además dada la producción de pares top-antitop, también se pueden producir otros procesos que pueden imitar la señal que estamos buscando, como la producción de W+jets o la producción de pares de bosones WZ. Por lo tanto, debemos de estudiar cuidadosamente loa fondos que pueden contribuir a nuestra muestra de eventos, estudiando a partir de simulaciones de Monte Carlo y aplicando criterios de selección que nos permitan maximizar la señal y minimizar los fondos, sin perder demasiados eventos de señal.
+
+Todos los datos que hemos usado durante la práctica han sido los siguientes:
+\begin{itemize}
+    \item \textbf{Datos reales:} Datos extraidos de colisiones protón-protón a $\sqrt{s} = 7$ TeV, correspondientes a una luminosidad integrada de $50.0 \, \mathrm{pb}^{-1}$, recolectados por el detector CMS durante el año 2011.
+    \item \textbf{Simulaciones de producción y recostrucción de MC:} Simulaciones de Monte Carlo para la producción y recostrucción de eventos de pares top-antitop, y para el fondo (W+jets, WZ, WW, ZZ, Drell-Yan, single top, QCD) todas a $1 \mathrm{pb}^{-1}$.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\columnwidth]{img/Feynman_fondo.png}
+    \caption{Diagramas de Feynman de los procesos de fondo.}
+    \label{fig:Feynman_fondo}
+\end{figure}
+
+\end{document}
+
+
+
+\begin{table}[hbt!]
+    \centering
+    \begin{tabular}{lc}
+        \hline
+        n & $e$ ($10^{-19}$ C) \\
+        \hline
+        gota 1  & $1.79 \pm 0.05$ \\
+        gota 2  & $1.89 \pm 0.05$ \\
+        gota 3  & $1.61 \pm 0.03$ \\
+        gota 4  & $1.60 \pm 0.03$ \\
+        gota 5  & $1.50 \pm 0.03$ \\
+        gota 6  & $2.11 \pm 0.10$ \\
+        gota 7  & $1.82 \pm 0.03$ \\
+        gota 8  & $1.93 \pm 0.10$ \\
+        gota 9  & $2.31 \pm 0.10$ \\
+        gota 10 & $2.48 \pm 0.10$ \\
+        gota 11 & $1.59 \pm 0.03$ \\
+        gota 12 & $1.58 \pm 0.03$ \\
+        gota 13 & $1.64 \pm 0.10$ \\
+        gota 14 & $1.76 \pm 0.05$ \\
+        gota 15 & $1.71 \pm 0.02$ \\
+        gota 16 & $1.73 \pm 0.10$ \\
+        \hline
+    \end{tabular}
+    \vspace{0.1cm}
+\caption{Valor estimado de la carga elemental ($e$) para cada gota}
+\label{tab:carga_elemental_gotas}
+\end{table}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\columnwidth]{img/planteamiento-teorico-carga-elec.png}
+    \caption{Planteamiento teórico del balance de fuerzas.}
+    \label{fig:planteamiento-teorico-carga-elec}
+\end{figure}

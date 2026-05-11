@@ -40,7 +40,8 @@ class Plotter:
         return self.GetHisto(process, name).Integral()
 
     def Stack(self, name):
-        if not os.path.exists(self.savepath): os.makedirs(self.savepath)
+        if not os.path.exists(self.savepath): 
+            os.makedirs(self.savepath)
         
         # --- EXCEPCIÓN PARA LA GRÁFICA DE EFICIENCIA ---
         if "Eficiencia" in name:
@@ -73,10 +74,13 @@ class Plotter:
             hstack.Add(h)
             l.AddEntry(h, s.name, "f")
         
+        hstack.SetMaximum(hstack.GetMaximum() * 1.2)
         hstack.Draw("hist")
         
-        if self.xtitle != '': hstack.GetXaxis().SetTitle(self.xtitle)
-        if self.ytitle != '': hstack.GetYaxis().SetTitle(self.ytitle)
+        if self.xtitle != '': 
+            hstack.GetXaxis().SetTitle(self.xtitle)
+        if self.ytitle != '': 
+            hstack.GetYaxis().SetTitle(self.ytitle)
         
         if self.dataSelector:
             hdata = self.dataSelector.GetHisto(name)
@@ -97,8 +101,10 @@ class Plotter:
 
     def SaveCounts(self, name, overridename=""):
         filename = overridename if overridename else "yields_" + name
-        if ".txt" not in filename: filename += ".txt"
-        if not os.path.exists(self.savepath): os.makedirs(self.savepath)
+        if ".txt" not in filename: 
+            filename += ".txt"
+        if not os.path.exists(self.savepath): 
+            os.makedirs(self.savepath)
         
         yields_mc = {}
         total_bkg, n_signal = 0.0, 0.0
@@ -106,10 +112,15 @@ class Plotter:
         for s in self.listOfSelectors:
             val = s.GetHisto(name).Integral()
             yields_mc[s.name] = val
-            if s.name == 'ttbar': n_signal = val
-            else: total_bkg += val
+            if s.name == 'ttbar': 
+                n_signal = val
+            else: 
+                total_bkg += val
 
         n_obs = self.dataSelector.GetHisto(name).Integral() if self.dataSelector else 0.0
+
+        if self.listOfSelectors[7].eficiencia_b is not None:
+            self.eff_b = self.listOfSelectors[7].eficiencia_b
 
         with open(self.savepath + "/" + filename, "w") as f:
             f.write("====================================================\n")
