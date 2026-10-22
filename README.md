@@ -26,7 +26,7 @@ tener sus propias dependencias y documentación.
 
 | Carpeta | Contenido |
 | --- | --- |
-| [`Apuntes/`](Apuntes/) | Apuntes, ejercicios y notebooks de clase. Incluye simulaciones de la montaña rusa. |
+| [`Apuntes/`](Apuntes/) | Apuntes, ejercicios y notebooks de clase. |
 | [`Cursos/`](Cursos/) | Material práctico de cursos y asignaturas. |
 | [`Datathon/`](Datathon/) | Análisis exploratorio, limpieza de datos y modelos predictivos. |
 | [`Datathon_2026/`](Datathon_2026/) | Material, datos y código del Datathon 2026. |
@@ -47,7 +47,6 @@ tener sus propias dependencias y documentación.
 
 Simulación física con cálculos y visualizaciones en 2D y 3D.
 
-- [`Apuntes/montaña_rusa/`](Apuntes/montaña_rusa/)
 - [`Fisica/MNAF2025/Matemática_aplicada/montaña_rusa/`](Fisica/MNAF2025/Matemática_aplicada/montaña_rusa/)
 
 ### 🤖 Agentes de inteligencia artificial

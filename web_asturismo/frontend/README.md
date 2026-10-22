@@ -1,16 +1,33 @@
-# React + Vite
+# Frontend de Web Asturismo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación React + Vite para visualizar un mapa interactivo de Asturias con datos de masificación turística, condiciones meteorológicas y eventos.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js (versión LTS recomendada)
+- npm
+- Backend FastAPI de este repositorio ejecutándose en `http://localhost:8000`
 
-## React Compiler
+## Instalación
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+```
 
-## Expanding the ESLint configuration
+## Ejecución en desarrollo
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run dev
+```
+
+## Scripts disponibles
+
+- `npm run dev`: inicia el servidor de desarrollo de Vite.
+- `npm run build`: genera la build de producción.
+- `npm run lint`: ejecuta ESLint sobre el proyecto.
+- `npm run preview`: sirve localmente la build generada.
+
+## Notas de integración
+
+- El frontend consume datos del backend en `http://localhost:8000`.
+- También obtiene geometrías GeoJSON de municipios de Asturias desde un servicio externo de `visorasturias.es`.
