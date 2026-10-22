@@ -1,243 +1,201 @@
 # 🚀 Proyectos
 
-> Repositorio personal de proyectos, experimentos y aprendizaje continuo.
+> Repositorio personal de proyectos académicos, experimentos y material de aprendizaje continuo.
 
 [![GitHub](https://img.shields.io/badge/GitHub-Edgarfevi-181717?style=flat&logo=github)](https://github.com/Edgarfevi)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![Jupyter](https://img.shields.io/badge/Jupyter-Notebooks-F37626?style=flat&logo=jupyter&logoColor=white)](https://jupyter.org/)
 
----
+Este repositorio reúne trabajos de universidad, hackathons, simulaciones,
+análisis de datos, inteligencia artificial y desarrollo web. Cada carpeta puede
+tener sus propias dependencias y documentación.
 
-## 📋 Tabla de Contenidos
+## 📋 Tabla de contenidos
 
-- [📖 Descripción](#-descripción)
-- [📁 Estructura del Repositorio](#-estructura-del-repositorio)
-- [⭐ Proyectos Destacados](#-proyectos-destacados)
-- [🛠️ Tecnologías Utilizadas](#tecnologías-utilizadas)
-- [🚀 Instalación y Uso](#-instalación-y-uso)
+- [📁 Estructura del repositorio](#-estructura-del-repositorio)
+- [⭐ Proyectos destacados](#-proyectos-destacados)
+- [🛠️ Tecnologías](#️-tecnologías)
+- [🚀 Instalación y uso](#-instalación-y-uso)
 - [🤝 Contribuciones](#-contribuciones)
 - [🔐 Seguridad](#-seguridad)
-- [📚 Citacion](#-citacion)
+- [📚 Citación](#-citación)
 - [📄 Licencia](#-licencia)
 - [📧 Contacto](#-contacto)
 
----
+## 📁 Estructura del repositorio
 
-## 📖 Descripción
+| Carpeta | Contenido |
+| --- | --- |
+| [`Apuntes/`](Apuntes/) | Apuntes, ejercicios y notebooks de clase. Incluye simulaciones de la montaña rusa. |
+| [`Cursos/`](Cursos/) | Material práctico de cursos y asignaturas. |
+| [`Datathon/`](Datathon/) | Análisis exploratorio, limpieza de datos y modelos predictivos. |
+| [`Datathon_2026/`](Datathon_2026/) | Material, datos y código del Datathon 2026. |
+| [`Fisica/`](Fisica/) | Prácticas y proyectos de física aplicada, métodos numéricos, electrónica y óptica. |
+| [`Hack_arcelor/`](Hack_arcelor/) | Soluciones, datos, informes y benchmarks del hackathon de Arcelor. |
+| [`Hackathon_agenteia/`](Hackathon_agenteia/) | Formación y experimentos sobre agentes, LLM y pipelines RAG. |
+| [`Hackathon_salud/`](Hackathon_salud/) | Análisis y modelado de datos relacionados con salud. |
+| [`IA/`](IA/) | Laboratorios de inteligencia artificial, redes neuronales y utilidades. |
+| [`Latex/`](Latex/) | Plantillas, portadas y recursos para documentos académicos en LaTeX. |
+| [`Mates/`](Mates/) | Material y ejercicios de matemáticas, incluyendo prácticas en R. |
+| [`Proyectos_python/`](Proyectos_python/) | Proyectos personales y experimentos desarrollados en Python. |
+| [`spaceapp/`](spaceapp/) | Código y recursos del proyecto de NASA Space Apps. |
+| [`web_asturismo/`](web_asturismo/) | Aplicación web de turismo en Asturias, con frontend React/Vite y backend FastAPI. |
 
-Este repositorio reúne proyectos académicos, profesionales y experimentales en un único lugar. Incluye trabajo en distintas áreas:
+## ⭐ Proyectos destacados
 
-- 🎯 **Hackathons y Datathons**
-- 🔬 **Simulaciones y cálculo científico**
-- 🤖 **Inteligencia Artificial y agentes**
-- 🌐 **Aplicaciones web full-stack**
-- 📚 **Apuntes y material educativo**
-- 🧪 **Experimentación con nuevas tecnologías**
+### 🎢 Simulador de montaña rusa
 
----
+Simulación física con cálculos y visualizaciones en 2D y 3D.
 
-## 📁 Estructura del Repositorio
+- [`Apuntes/montaña_rusa/`](Apuntes/montaña_rusa/)
+- [`Fisica/MNAF2025/Matemática_aplicada/montaña_rusa/`](Fisica/MNAF2025/Matemática_aplicada/montaña_rusa/)
 
-### 🎓 **APUNTES/**
-Notas y materiales educativos.
+### 🤖 Agentes de inteligencia artificial
 
-- Notebooks de clase y ejercicios.
-- **Montaña Rusa**: simulaciones 2D y 3D con modelos físicos en Python.
+Experimentos con agentes inteligentes, modelos de lenguaje y recuperación
+aumentada mediante generación (RAG).
 
-### ☕ **Cursos/**
-Material práctico de formación y cuadernos por asignaturas/temas.
+- [`Hackathon_agenteia/`](Hackathon_agenteia/)
 
-### 📊 **Datathon/**
-Proyectos de ciencia de datos.
+### 🏥 Análisis de salud
 
-- Modelos de predicción.
-- Limpieza y procesamiento de datasets.
-- Scripts y análisis exploratorio.
+Exploración de datos y modelos relacionados con la enfermedad renal crónica.
 
-### ⚛️ **FISICA/**
-Proyectos de física aplicada y métodos numéricos.
-
-- **Electronica/**: gráficas y prácticas de laboratorio.
-- **FAEA/**: recursos, resultados y programación científica.
-- **MNAF2025/**: trabajo de métodos numéricos aplicados a física.
-- **Optica/**: prácticas y entregas.
-- **TEIII/**: informes, gráficas y utilidades de asignatura.
-
-### 🏭 **Hack_arcelor/**
-Soluciones de hackathon con notebooks, optimizaciones y benchmarks en CSV.
-
-### 🏆 **Hackathon_agenteia/**
-Proyectos de IA aplicada a agentes.
-
-- Implementaciones de agentes inteligentes.
-- Material de formación en LLMs.
-- Pruebas de pipelines tipo RAG.
-
-### 🏥 **Hackathon_salud/**
-Análisis de datos en salud.
-
-- Notebooks de exploración.
-- Modelado sobre enfermedad renal crónica.
-
-### 🤖 **IA/**
-Laboratorios y scripts de IA.
-
-- **LUCAS/**: prácticas de redes neuronales.
-- **scripts/**: conversión LaTeX y utilidades de procesamiento.
-
-### 📝 **Latex/**
-Plantillas y portadas académicas en LaTeX.
-
-### 🐍 **Proyectos_python/**
-Colección de proyectos personales y experimentos en Python.
-
-### 🌌 **spaceapp/**
-Trabajo relacionado con NASA Space Apps.
-
-- Cálculos astronómicos.
-- Código de apoyo para el hackathon.
-
-### 🌐 **web_asturismo/**
-Aplicación web completa.
-
-- **Backend/**: API.
-- **Frontend/**: React + Vite.
-
----
-
-## ⭐ Proyectos Destacados
-
-### 🎢 Simulador de Montaña Rusa
-Simulación física de montaña rusa con visualizaciones 2D y 3D.
-
-- 📂 [APUNTES/montaña_rusa/](APUNTES/montaña_rusa/)
-- 📂 [FISICA/MNAF2025/montaña_rusa/](FISICA/MNAF2025/montaña_rusa/)
-
-### 🤖 Agentes de IA
-Desarrollo de agentes inteligentes y experimentación con modelos de lenguaje.
-
-- 📂 [Hackathon_agenteia/](Hackathon_agenteia/)
-
-### 🏥 Análisis de Salud
-Modelos predictivos y análisis de datos médicos.
-
-- 📂 [Hackathon_salud/](Hackathon_salud/)
+- [`Hackathon_salud/`](Hackathon_salud/)
 
 ### 🌐 Web Asturismo
-Proyecto full-stack orientado a turismo.
 
-- 📂 [web_asturismo/](web_asturismo/)
+Aplicación full-stack orientada a la planificación turística en Asturias.
 
----
+- [`web_asturismo/frontend/`](web_asturismo/frontend/)
+- [`web_asturismo/backend/`](web_asturismo/backend/)
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Tecnologías
 
-### Lenguajes
-- ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
-- ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black)
-- ![LaTeX](https://img.shields.io/badge/LaTeX-008080?style=flat&logo=latex&logoColor=white)
+### Lenguajes y entornos
 
-### Frameworks y Librerías
-- ![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
-- ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
-- ![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=flat&logo=jupyter&logoColor=white)
-- **NumPy, Pandas** para análisis de datos.
-- **Matplotlib** para visualización.
-- **Manim** para animaciones matemáticas.
+- Python
+- JavaScript
+- R
+- LaTeX
+- Jupyter Notebook/JupyterLab
+
+### Librerías y frameworks
+
+- NumPy, Pandas y Matplotlib para análisis y visualización.
+- SciPy para cálculo científico.
+- Manim para animaciones matemáticas.
+- React y Vite para el frontend web.
+- FastAPI y Uvicorn para la API de Asturismo.
 
 ### Herramientas
-- ![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white)
-- ![VS Code](https://img.shields.io/badge/VS%20Code-007ACC?style=flat&logo=visual-studio-code&logoColor=white)
-- Entornos virtuales (**venv**).
-- Jupyter Notebook / JupyterLab.
 
----
+- Git y Git LFS para el control de versiones y archivos grandes.
+- Visual Studio Code.
+- Entornos virtuales de Python (`venv`).
 
-## 🚀 Instalación y Uso
+## 🚀 Instalación y uso
 
-### Requisitos Previos
-- Python 3.12+
-- Node.js (para proyectos web)
-- Jupyter Notebook/Lab
-- Git (y opcionalmente Git LFS para archivos grandes)
+### Requisitos
 
-### Clonar el Repositorio
+- Git.
+- Python 3.12 o una versión compatible con el proyecto que se vaya a ejecutar.
+- Node.js y npm para [`web_asturismo/frontend/`](web_asturismo/frontend/).
+- Jupyter Notebook o JupyterLab para los notebooks.
+- Git LFS si se necesitan archivos gestionados con LFS.
+
+### Clonar el repositorio
+
 ```bash
 git clone https://github.com/Edgarfevi/Proyectos.git
 cd Proyectos
 ```
 
-### Para Proyectos Python
+### Ejecutar un proyecto Python
+
+No existe un único archivo de dependencias para todo el repositorio. Cada
+proyecto Python puede requerir paquetes distintos. Se recomienda crear un
+entorno virtual dentro del proyecto correspondiente:
+
 ```bash
-# Crear entorno virtual
+cd ruta/al/proyecto
 python -m venv .venv
-
-# Activar entorno virtual (Linux/Mac)
-source .venv/bin/activate
-
-# Actualizar pip
-pip install --upgrade pip
-
-# Instalar dependencias (si existe requirements.txt)
-pip install -r requirements.txt
+source .venv/bin/activate       # Linux/macOS
+# .venv\Scripts\activate        # Windows PowerShell
+python -m pip install --upgrade pip
 ```
 
-### Para Notebooks de Jupyter
+Si el proyecto incluye un archivo de dependencias, instálalo desde esa carpeta:
+
 ```bash
-jupyter notebook
-# o
+python -m pip install -r requirements.txt
+```
+
+### Abrir notebooks
+
+Desde la raíz del repositorio o desde el proyecto que se quiera explorar:
+
+```bash
 jupyter lab
 ```
 
-### Para el Proyecto Web
+### Ejecutar el frontend de Web Asturismo
+
 ```bash
 cd web_asturismo/frontend
 npm install
 npm run dev
 ```
 
----
+Otros comandos disponibles en el frontend:
+
+```bash
+npm run build    # Genera la compilación de producción
+npm run lint     # Ejecuta ESLint
+npm run preview  # Sirve la compilación localmente
+```
+
+El backend de [`web_asturismo/backend/`](web_asturismo/backend/) usa FastAPI y
+Uvicorn. Antes de ejecutarlo hay que instalar sus dependencias y revisar la
+configuración de datos de [`main.py`](web_asturismo/backend/API/archivos_py/main.py),
+ya que actualmente contiene rutas locales absolutas a los archivos de datos.
 
 ## 🤝 Contribuciones
 
-Este es un repositorio personal de aprendizaje, pero las sugerencias son siempre bienvenidas. Si encuentras algo interesante o tienes ideas para mejorar algún proyecto:
+Este es principalmente un repositorio personal de aprendizaje, pero las
+sugerencias y mejoras son bienvenidas:
 
-1. Abre un **Issue**.
-2. Haz un **Fork** del repositorio.
-3. Crea una **Pull Request**.
+1. Abre un [issue](https://github.com/Edgarfevi/Proyectos/issues) describiendo
+   el cambio o problema.
+2. Haz un fork y crea una rama descriptiva.
+3. Realiza cambios pequeños y documenta cualquier comportamiento nuevo.
+4. Abre una pull request con el contexto y las comprobaciones realizadas.
 
-Guia completa en [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
+Consulta [`CONTRIBUTING.md`](CONTRIBUTING.md) para conocer las buenas prácticas
+del repositorio.
 
 ## 🔐 Seguridad
 
-Si detectas una vulnerabilidad, revisa [SECURITY.md](SECURITY.md) para el proceso de reporte responsable.
+No publiques credenciales, tokens, datos privados ni información sensible.
+Para informar de una vulnerabilidad, sigue el proceso descrito en
+[`SECURITY.md`](SECURITY.md) y evita abrir un issue público con los detalles.
 
----
+## 📚 Citación
 
-## 📚 Citacion
-
-Si usas este repositorio en trabajos academicos, puedes citarlo con [CITATION.cff](CITATION.cff).
-
----
+Si utilizas este repositorio en un trabajo académico, consulta los metadatos de
+[`CITATION.cff`](CITATION.cff).
 
 ## 📄 Licencia
 
-Este proyecto está bajo la licencia **MIT**.
-
-Consulta el archivo [LICENSE](LICENSE) para más detalles.
-
----
+El contenido se distribuye bajo la licencia **MIT**. Consulta
+[`LICENSE`](LICENSE) para conocer los términos completos.
 
 ## 📧 Contacto
 
-**Edgar**
+**Edgar Fernández Vigil**
 
 - GitHub: [Edgarfevi](https://github.com/Edgarfevi)
 - Email: [Edgarfevi@outlook.es](mailto:Edgarfevi@outlook.es)
-
----
 
 <div align="center">
 
@@ -246,4 +204,3 @@ Consulta el archivo [LICENSE](LICENSE) para más detalles.
 **Hecho con ❤️ y mucho esfuerzo**
 
 </div>
-
