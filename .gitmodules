@@ -1,3 +1,6 @@
 [submodule "Latex/Plantillas/plantilla-rho"]
 	path = Latex/Plantillas/plantilla-rho
 	url = https://github.com/edgarfevi/Rho-class.git
+[submodule "Latex/Plantillas/inria-latex-poster"]
+	path = Latex/Plantillas/inria-latex-poster
+	url = https://github.com/Edgarfevi/inria-latex-poster
