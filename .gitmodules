@@ -4,3 +4,6 @@
 [submodule "Latex/Plantillas/inria-latex-poster"]
 	path = Latex/Plantillas/inria-latex-poster
 	url = https://github.com/Edgarfevi/inria-latex-poster
+[submodule "Uniovi_IS"]
+	path = Uniovi_IS
+	url = https://github.com/Edgarfevi/Uniovi_IS
